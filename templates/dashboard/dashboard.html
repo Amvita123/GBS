@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load static %}
+{% block nav_title %}
+    {% with page_title="Dashboard" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% block content %}
+<section class="common-section spacer">
+    <div class="container">
+      <div class="dashboard-card-wrapper">
+
+        <div class="row justify-content-end">
+            <div class="col-md-9 col-xl-5 col-xxl-3">
+              <form>
+                  <div class="filter-blk d-flex justify-content-end">
+                    <input type="text" name="date-range" value="{{request.GET.from}}" id="datePicker" class="form-control me-2" placeholder="From" style="
+                    max-width: 216px;">
+                    {% comment %} <input type="date" name="to" value="{{request.GET.to}}" class="form-control" placeholder=""> {% endcomment %}
+                    <button class="btn border border-1 ms-1"><i class="fa fa-search"></i></button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-3 g-4 mt-2">
+          <div class="col">
+            <a href="{% url 'athlete_management' %}{% if from_date and to_date %}?from={{from_date}}&to={{to_date}} {% endif %}">
+              <div class="dashboard-card-item">
+                <div class="dashboard-card-content">
+                  <div class="dashboard-card-info">
+                    <h2>Total Registered Athletes</h2>
+                    <p>{{athletes}}</p>
+                  </div>
+                  <div class="dashboard-card-icon">
+                    <img src="{% static 'images/dashboard/athletes.png' %}" alt="Icon">
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <div class="col">
+            <a href="{% url 'coach_management' %}{% if from_date and to_date %}?from={{from_date}}&to={{to_date}} {% endif %}">
+              <div class="dashboard-card-item">
+                <div class="dashboard-card-content">
+                  <div class="dashboard-card-info">
+                    <h2>Total Registered Coaches</h2>
+                    <p>{{coach}}</p>
+                  </div>
+                  <div class="dashboard-card-icon">
+                    <img src="{% static 'images/dashboard/coach.png' %}" alt="Icon">
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <div class="col">
+           <a href="{% url 'fans_management' %}{% if from_date and to_date %}?from={{from_date}}&to={{to_date}} {% endif %}">
+            <div class="dashboard-card-item">
+              <div class="dashboard-card-content">
+                <div class="dashboard-card-info">
+                  <h2>Total Registered Fans</h2>
+                  <p>{{fans}}</p>
+                </div>
+                <div class="dashboard-card-icon">
+                  <img src="{% static 'images/dashboard/fan.png' %}" alt="Icon">
+                </div>
+              </div>
+            </div>
+           </a>
+          </div>
+        </div>
+      </div>
+    
+    </div>
+  </section>
+{% endblock%}
+
+{% block js %}
+<script>
+  // custom datepicker start
+
+$(function() {
+
+  var start = moment().subtract(29, 'days');
+  var end = moment();
+
+  function cb(start, end) {
+      $('#datePicker span.outline_btn_title').html(start.format('MMMM D, YYYY') + '-' + end.format('MMMM D, YYYY'));
+  }
+
+
+
+  $('#datePicker').daterangepicker({
+      startDate: start,
+      endDate: end,
+      "opens": "left",
+      ranges: {
+         'Today': [moment(), moment()],
+         'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+         'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+         'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+         'This Month': [moment().startOf('month'), moment().endOf('month')],
+         'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+      }
+  }, cb);
+  cb(start, end);
+
+});
+</script>
+
+{% endblock %}

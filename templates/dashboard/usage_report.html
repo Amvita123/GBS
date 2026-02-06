@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Discount Management{% endblock %}
+
+{% block nav_title %}
+{% with page_title="Discount Management" %}
+{{ block.super }}
+{% endwith %}
+{% endblock nav_title %}
+
+{% block content %}
+<section class="main-section spacer">
+   <div class="container">
+      <div class="wrapper-card p-4">
+         <div class="sub_heading_card sub-heading flex-box mb-4 justify-content-between align-items-center">
+            <h2>Code Usage Report</h2>
+            <a href="{% url 'discount_management' %}" class="btn btn-dark px-4">Back</a>
+         </div>
+         <div class="row g-4 mt-2">
+            <div class="col-md-6">
+               <label>Discount Code</label>
+               <input class="form-control" value="{{ code.code_identifier }}" readonly>
+            </div>
+            <div class="col-md-6">
+               <label>Code Value</label>
+               <input class="form-control" value="{{ code.code_value }}%" readonly>
+            </div>
+            <div class="col-md-6">
+               <label>Usage Limit</label>
+               <input class="form-control" value="{{ code.usage_limit }}" readonly>
+            </div>
+            <div class="col-md-6">
+               <label>Current Usage Count</label>
+               <input class="form-control" value="{{ code.current_usage }}" readonly>
+            </div>
+            <div class="col-md-6">
+               <label>Remaining Usage</label>
+               <input class="form-control" value="{{ remaining }}" readonly>
+            </div>
+         </div>
+         <hr class="my-5">
+         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h2 class="mb-0">Usage details</h2>
+            <div class="d-flex gap-2 flex-wrap">
+               <form method="get" class="d-flex gap-2">
+                  <input type="text"
+                     name="q"
+                     id="searchInput"
+                     class="form-control"
+                     placeholder="Search..."
+                     style="width:250px"
+                     value="{{ query }}">
+                  {% if query %}
+                  <a href="{% url 'usage_report' code.id %}" class="btn btn-dark">
+                  <i class="fa-solid fa-xmark"></i>
+                  </a>
+                  {% endif %}
+               </form>
+               <select id="sortBy" class="form-select" style="width:180px">
+                  <option value="">Sort By</option>
+                  <option value="email">Email</option>
+                  <option value="role">User Type</option>
+                  <option value="date">Created At</option>
+               </select>
+            </div>
+         </div>
+         <div class="table-blk mt-3">
+            <table id="usageTable" class="table border-0">
+               <thead>
+                  <tr>
+                     <th>S.No</th>
+                     <th>Email</th>
+                     <th>User Type</th>
+                     <th>Created At</th>
+                     <th>Actions</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  {% for user in codes %}
+                  <tr>
+                     <td>{{ forloop.counter }}</td>
+                     <td>{{ user.user.email }} ({{ user.user.username }})</td>
+                     <td>{{ user.user.user_role }}</td>
+                     <td>{{ user.created_at|date:"d M Y, h:i A" }}</td>
+                     <td>
+                        <span class="table-action d-flex align-items-center gap-2">
+
+                            {% if user.user.user_role == "player" %}
+                                <a href="{% url 'athlete_profile' user.user.id %}" class="table-eye">
+
+                            {% elif user.user.user_role == "coach" %}
+                                <a href="{% url 'coach_profile' user.user.id %}" class="table-eye">
+
+                            {% elif user.user.user_role == "fan" %}
+                                <a href="{% url 'fan_profile' user.user.id %}" class="table-eye">
+
+                            {% endif %}
+
+                                    <img src="{% static 'images/table/eye.png' %}">
+                                </a>
+
+                        </span>
+                    </td>
+
+                  </tr>
+                  {% empty %}
+                  <tr>
+                     <td colspan="5" class="text-center text-muted">No usage found</td>
+                  </tr>
+                  {% endfor %}
+               </tbody>
+            </table>
+         </div>
+         {% include "pagination.html" with page_obj=codes %}
+      </div>
+   </div>
+</section>
+{% endblock %}
+
+{% block js %}
+<script>
+   $(document).ready(function () {
+       let hasData = $('#usageTable tbody tr').length > 0 &&
+                     !$('#usageTable tbody tr td[colspan]').length;
+
+       if (hasData) {
+           let table = $('#usageTable').DataTable({
+               paging: false,
+               lengthChange: false,
+               searching: true,
+               ordering: true,
+               info: false,
+               autoWidth: false,
+               dom: "lrtip",
+               order: []
+           });
+
+           const columnMap = {
+               "sno": 0,
+               "email": 1,
+               "role": 2,
+               "date": 3
+           };
+
+           $('#searchInput').on('keyup', function () {
+               table.search(this.value).draw();
+           });
+
+           $('#sortBy').on('change', function () {
+               let selected = $(this).val();
+               let columnIndex = columnMap[selected];
+               if (columnIndex !== undefined) {
+                   table.order([columnIndex, 'asc']).draw();
+               }
+           });
+       }
+   });
+</script>
+{% endblock %}

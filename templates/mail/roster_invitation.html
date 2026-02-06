@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <title>Join {{ roster_name }} - Athlete Rated</title>
+    <link href="{% static 'css/email.css' %}" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>You're Invited to Join {{ roster_name }}</h2>
+
+        <p>Hello <span class="highlight">{{ recipient_name }}</span>,</p>
+
+        <p>
+            <strong>{{ coach_name }}</strong> has invited you to join the <strong>{{ roster_name }}</strong> roster
+            on Athlete Rated. Download our app to connect with your team, track progress, and stay updated.
+        </p>
+
+        <div class="details-box">
+            <p><strong>Team/Roster:</strong> {{ roster_name }}</p>
+            <p><strong>Coach:</strong> {{ coach_name }}</p>
+            <p><strong>Sport:</strong> {{ sport }}</p>
+            {% if season %}
+            <p><strong>Season:</strong> {{ season }}</p>
+            {% endif %}
+        </div>
+
+        <p>
+            Get started by downloading the Athlete Rated app and accepting your invitation:
+        </p>
+
+        <p style="text-align: center; margin: 30px 0;">
+            <a href="{{ app_store_link }}"
+               style="background-color: #007bff; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; margin: 5px;">
+                Download on App Store
+            </a>
+            <a href="{{ play_store_link }}"
+               style="background-color: #34a853; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; margin: 5px;">
+                Get it on Google Play
+            </a>
+        </p>
+
+        <p>
+            If you already have the app installed, simply open it and go to notifications.
+        </p>
+
+        <p>
+            If you did not expect this invitation or believe this was sent in error, please ignore it or contact our support team.
+        </p>
+
+        <div class="footer">
+            <p>© {{ year }} Athlete Rated. All rights reserved.</p>
+            <small>This invitation was sent by {{ coach_name }} via Athlete Rated.</small>
+        </div>
+    </div>
+</body>
+</html>

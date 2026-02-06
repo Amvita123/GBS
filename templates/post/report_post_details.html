@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Post Report Management {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Post Report Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+{% block content %} 
+<section class="main-section spacer">
+    <div class="container">
+        <a href="{% url 'post_report_management' %}" class="btn fw-bold mb-2 ms-1"> <i class="fa-solid fa-arrow-left"></i> Back</a>
+        <div class="wrapper-card border border-1 p-0">
+            <div class="row gy-3 ">
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-box mb-3">
+                        <h2>Post Report Details</h2>
+                    </div>
+                </div> 
+            </div>
+            <div class="row">
+                <div class="col-xxl-11">
+                    <div class="detail_wrapper_card">
+                        <div class="row gy-3 gx-4 gx-xxl-5">
+                            <div class="col-md-6 col-lg-6">
+                                <div class="common-statistics">
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Reported By</h2>
+                                        <p class="mb-0">{{report.user.username}}</p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Reason</h2>
+                                        <p class="mb-0">{{report.reason.reason}}</p>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-6">
+                                <div class="common-statistics">
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">UserName</h2>
+                                        <p class="mb-0">{{report.feed.user.username}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+           </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-6 col-lg-4">
+                <div class="wrapper-card border border-1 p-0"> 
+                    <div class="row">            
+                        <div class="col-12 col-sm-12">
+                            <div class="sub_heading_card sub-heading flex-box mb-2">
+                                <h2>Post Details</h2>    
+                            </div>
+                            <div class="post_card p-0 bg-white m-3">
+                                <div class="post_header top-heading d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div>
+                                            {% if post.user.profile_pic %}
+                                            <img src="{{post.user.profile_pic.url}}" class="img-fluid" height="60" width="60">
+                                            {% else %}
+                                            <img src="{% static 'images/user.png' %}" class="img-fluid" height="60" width="60">
+                                            {% endif %}
+                                        </div>
+                                        <div class="post_user_title">
+                                            <h5 class="fw-bold mb-0">{{post.user.get_full_name|title}}</h5>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                                <div class="post_img">
+                                    <img src="{{post.file.url}}" alt="Post Image" />
+                                </div>
+                                <div class="post_info"> 
+                                    <div class="post_tags">
+                                        <div class="d-flex justify-content-between">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <i class="far fa-heart"></i>
+                                                <i class="far fa-comment"></i>
+                                                <i class="far fa-paper-plane"></i>
+                                            </div>
+        
+                                        {% if post.tags.all %}
+                                            <div class="d-flex align-items-center gap-2">
+                                                <ul class="list-unstyled users-list m-0 avatar-group d-flex align-items-center">
+                                                    {% for tag in post.tags.all|slice:":3" %}    
+        
+                                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up"
+                                                    title="{{tag.username}}" data-bs-original-title="{{tag.username}}">
+                                                        {% if tag.profile_pic %}
+                                                        <img src="{{tag.profile_pic.url}}" style="width: 28px; height: 28px;" alt="E" class="rounded-circle">
+                                                        {% else %}
+                                                        <img src="{% static 'images/user.png' %}" style="width: 28px; height: 28px;" alt="E" class="rounded-circle">
+                                                        {% endif %}
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                                {% if post.tags.all|length > 3 %}
+                                                <span>Others + {{post.tags.all|length|add:"-3"}}</span>
+                                                {% endif %}
+                                            </div>
+                                        {% endif%}
+                                        </div>
+                                        <h6 class="fw-bold">{% if post.comments.all|length > 0 %} View all {{post.comments.all|length}} Comments {% else %} Not comment yet. {% endif %}</h6>
+                                    </div>
+                                    <div class="post_badges">
+                                        {% if post.badges_objects %}
+        
+                                        <div class="d-flex justify-content-between mb-2">
+                                        {% for badge in post.badges_objects%}
+                                            <div>
+                                                <p class="mb-0 fw-bold">{{badge.badge.name}}</p>
+                                            </div>
+                                        {% endfor %}
+                                        </div>
+                                    {% endif %}
+        
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-3">
+                            <div class="hstack justify-content-center align-items-center gap-3 pb-4">
+                                <a href="?action=deactivate&id={{post.user.id}}" class="btn bg-black text-white">Deactivate User Account</a>
+
+                            <a href="?action=delete_post&id={{post.id}}" class="btn border border-1 rounded">
+                                <i class="fa-solid fa-trash-can text-danger"></i>
+                            </a>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</section>
+
+
+{% endblock %}

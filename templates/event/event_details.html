@@ -1,0 +1,574 @@
+{% extends "base.html" %}
+{% load static %}
+{% load event_filters %}
+{% block title%} Events Management {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Events Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% block css %}
+<style>
+    .common-info {
+        display: flex;
+        gap: 20px; 
+        margin-bottom: 25px;
+    }
+    
+    .common-info h2 {
+        font-size: 16px;
+        font-weight: 500;
+        font-family: var(--primary-font);
+        color: #8A8A8A;
+        min-width: 150px; 
+        margin-bottom: 0;
+        line-height: 19.2px;
+    }
+    
+    .common-info h4 {
+        font-size: 16px;
+        font-weight: 500;
+        font-family: var(--primary-font);
+        margin: 0;
+        flex-grow: 1; 
+    }
+    
+    .event_img {
+        width: 150px;
+        height: 150px; 
+        border-radius: 50%;
+    }
+    .event_img img {
+        width: 100%;
+        height: 100%; 
+        object-fit: cover; 
+    }
+
+    .event_qr {
+        width: 200px;
+        height: auto;
+        border: 2px solid black;
+        border-radius: 5%;
+    }
+
+    {% comment %} .qr-down-btn {
+    position: absolute;
+    left: 879px;
+    bottom: -217px;
+} {% endcomment %}
+
+</style>
+{% endblock css %}
+
+{% block content %} 
+<section class="main-section spacer">
+    <div class="container">
+        <a href="{% url 'event_management' %}" class="btn fw-bold mb-2 ms-1"> <i class="fa-solid fa-arrow-left"></i> Back</a>
+        <div class="wrapper-card p-0 border border-1">
+            <div class="row gy-3">
+                <div class="col-xl-12">
+                    <div class="h3 sub_heading_card sub-heading flex-wrap gap-3 flex-box mb-3">
+                        <h2>Event Details</h2>
+                        <div class="hstack flex-wrap gap-2">
+                            {% if event.event_transactions.all %}
+                            <a class="btn btn-black bg-black text-white fw-bold"  data-bs-toggle="modal" data-bs-target="#transaction" >Transaction </a>
+                            {% endif %}
+                            <a class="btn btn-black bg-black text-white fw-bold" data-bs-toggle="modal" data-bs-target="#team">Teams</a>
+                            <a class="btn btn-black bg-black text-white fw-bold" data-bs-toggle="modal" data-bs-target="#roster">Rosters</a>
+                            <a class="btn btn-black bg-black text-white fw-bold" href="{% url 'event_check_in_users'  pk=event.id %}">CheckIn Users</a>
+
+                            {% if request.user.user_role != "sub_admin"%}
+                                <a class="btn btn-black bg-black text-white fw-bold" data-bs-toggle="modal" data-bs-target="#assignSubAdmin">
+                                    Assign Sub-Admin
+                                </a>
+                            {% endif %}
+
+
+                        </div>
+                    </div>
+                    <div class="container">
+                        {% if event.is_active is False %}
+                    <div class="row justify-content-center">
+                        <div class="col-sm-6">
+                            <div class="alert alert-danger" role="alert">
+                            <strong>Inactive Event:</strong> This event is inactive because the payment has failed.
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="event_img mx-auto">
+                                <img src="{{event.logo.url}}" class="rounded-circle" alt="Event Logo">
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="common-statistics ps-2">
+                                <div class="d-flex common-info">
+                                    <h2 class="h4">Event Name</h2>
+                                    <h4>{{event.name|title}}</h4>
+                                </div>
+
+                                <div class="d-flex common-info">
+                                    <h2 class="h4">Event Type</h2>
+                                    <h4>{{event.event_type|title}}</h4>
+                                </div>
+
+                                <div class="common-info">
+                                    <h2 class="h4">Booking Link</h2>
+                                    <h4>
+                                        {% for link in event.booking_link %}
+                                            <div>
+                                                {{forloop.counter}}) <a href="{{link}}" target="_blank" title="click to open" class="text-break text-primary">{{link}}</a>
+                                            </div>
+                                        {% endfor %}
+                                    </h4>
+                                </div>
+                                <div class="common-info">
+                                    <h2 class="h4">Date</h2>
+                                    <h4>{{event.date|date:"m-d-Y h:i A"}}</h4>
+                                </div>
+                                {% if event.end_date %}
+                                <div class="common-info">
+                                    <h2 class="h4">End Date</h2>
+                                    <h4>{{event.end_date|date:"m-d-Y h:i A"}}</h4>
+                                </div>
+                                {% endif %}
+
+                                <div class="common-info">
+                                    <h2 class="h4">Location</h2>
+                                    <h4>{{event.location|title}}</h4>
+                                </div>
+
+                                <div class="common-info">
+                                    <h2 class="h4">Description</h2>
+                                    <h4>{{event.description}}</h4>
+                                </div>
+                                <div class="common-info">
+                                    <h2 class="h4">Details</h2>
+                                    <ul style="padding-left: 0; list-style-type: none;">
+                                        {% for rule in event.rules.all %}
+                                            <li style="margin-bottom: 5px; font-size: 16px; font-weight: 500; font-family: var(--primary-font);">
+                                                {{ forloop.counter }}. {{ rule.text }}
+                                            </li>
+                                        {% empty %}
+                                            <li>Details not found</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+
+                                <div class="common-info">
+                                    <h2 class="h4">Status</h2>
+                                    {% with status=event.date|get_event_status%}
+                                    {% if status == "upcoming" %}
+                                    <h4 class="text-success">{{status|title}}</h4>
+                                    {% else %}
+                                    <h4 class="text-primary">{{status|title}}</h4>
+                                    {% endif %}
+                                    {% endwith %}
+                                </div>
+
+                                {% if event.qr_code %}
+                                 <div class="common-info">
+                                    <h2 class="h4">QR Code</h2>
+                                    <div class="hstack position-relative flex-wrap gap-2 align-items-sm-end">
+                                        <img class="event_qr" src="{{event.qr_code.url}}"/>
+                                        <a class="qr-down-btn" download href="{{event.qr_code.url}}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="black" class="bi bi-arrow-down-circle-fill" viewBox="0 0 16 16">
+                                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8.5 4.5a.5.5 0 0 0-1 0v5.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 
+                                            .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293z"/>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+
+                    {% comment %} transaction  {% endcomment %}
+                    <div class="modal fade" id="transaction" tabindex="-1" aria-labelledby="transaction" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="HyperModalLabel">Payer info</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+
+                        <div class="modal-body">
+                            {% if event.event_transactions.all %}
+                                {% for transaction in event.event_transactions.all %}
+                                <div class="card mb-3 shadow-sm">
+                                    <div class="card-body">
+                                    <h5 class="card-title">Transaction id #{{ transaction.session_id }}</h5>
+                                    <p><strong>Amount:</strong> {{ transaction.amount }}</p>
+                                    {% if transaction.status == "succeeded" %}
+                                    <p><strong>Status:</strong> <span class="text-success">{{ transaction.status|title }}</span></p>
+                                    {% elif transaction.status == "failed" %}
+                                    <p><strong>Status:</strong> <span class="text-danger">{{ transaction.status|title }}</span></p>
+                                    {% else %}
+                                    <p><strong>Status:</strong> <span class="text-warning">{{ transaction.status|title }}</span></p>
+                                    {% endif %}
+
+                                    {% if transaction.payer_info %}
+                                        <hr>
+                                        <h6 class="text-muted">Payer Details</h6>
+                                        <ul class="list-unstyled mb-0">
+                                        <li><strong>Name:</strong> {{ transaction.payer_info.name.given_name }} {{ transaction.payer_info.name.surname }}</li>
+                                        <li><strong>Email:</strong> {{ transaction.payer_info.email_address }}</li>
+                                        <li><strong>Payer ID:</strong> {{ transaction.payer_info.payer_id }}</li>
+                                        <li><strong>Country:</strong> {{ transaction.payer_info.address.country_code }}</li>
+                                        </ul>
+                                    {% else %}
+                                        <p class="text-muted"><em>No payer info available.</em></p>
+                                    {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-center text-muted">No transactions yet for this event.</p>
+                            {% endif %}
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                            </div>
+                        </div>
+                     </div>
+                    {% comment %}  {% endcomment %}
+
+                    {% comment %} add  teams{% endcomment %}
+                    <div class="modal fade" id="addteam" tabindex="-1" aria-labelledby="addteam" aria-hidden="true">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="addteam"> Add Team for Check-in </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="col-12 my-3">
+                                        <label for="name" class="form-label">Team Name</label>
+                                        <input type="text" class="form-control" name="name" id="name" placeholder="enter team name" required>
+                                        <div class="text-danger">{{ form.name.errors }}</div>
+                                    </div>
+
+                                    <div class="col-12 my-3">
+                                        <label for="class" class="form-label">Class (Optional)</label>
+                                        {% comment %} <input type="text" class="form-control" name="grade" id="class" placeholder="enter class of team"> {% endcomment %}
+                                           <select name="grade" id="class" class="form-control">
+                                                <option value="">Select class</option>
+                                                {% for grade in grades %}
+                                                <option value="{{grade.name}}">{{grade.name}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        <div class="text-danger">{{ form.grade.errors }}</div>
+                                    </div>
+
+                                  <div class="col-12 my-3">
+                                    <label for="gender" class="form-label">Gender</label>
+                                    <select class="form-select" name="gender" id="gender">
+                                        <option value="" selected>Select Gender (Optional)</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    <div class="text-danger">{{ form.gender.errors }}</div>
+                                </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#team" style="background:#757575 !important">Cancel</button>
+                                    <a class="btn bg-black text-white" data-bs-toggle="modal" data-bs-target="#uploadcsv">Insert CSV</a>
+                                    <button type="submit" class="btn bg-black text-white" name="add_team" value="add_team">Add</button>
+                                </div>
+                            </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% comment %} upload csv {% endcomment %}
+                      <div class="modal fade" id="uploadcsv" tabindex="-1" aria-labelledby="uploadcsv" aria-hidden="true">
+                        <form method="post" enctype="multipart/form-data" action="{% url 'insert_event_check_in_csv' pk=pk %}">
+                            {% csrf_token %}
+                            <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="uploadcsv">Upload CheckIn Data</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="col-12 my-3">
+                                        <label for="file" class="form-label">Select File</label>
+                                        <input type="file" class="form-control" name="file" id="file" placeholder="click here" accept=".csv" required>
+                                        <div class="text-danger">{{ form.file.errors }}</div>
+                                        <a class="text-info float-end" href="/static/check_sample_sheet.csv" download>Download sample ?</a>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addteam" style="background:#757575 !important">Cancel</button>
+                                    <button type="submit" class="btn bg-black text-white" name="uploadcsv" value="uploadcsv">Submit</button>
+                                </div>
+                            </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% comment %} end upload csv {% endcomment %}
+                    {% comment %} view all teams {% endcomment %}
+                     <div class="modal fade" id="team" tabindex="-1" aria-labelledby="team" aria-hidden="true">
+                       <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">All Check-in Teams</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+
+                        <div class="modal-body table-blk">
+                            <table class="display border-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>S.No</th>
+                                            <th>Team Name</th>
+                                            <th>Class</th>
+                                            <th>Gender</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% comment %} self checkin user {% endcomment %}
+                                        {% for team in event_teams %}
+                                        <tr>
+                                            <td>{{forloop.counter}}</td>
+                                            <td>{{team.name|title}}</td>
+                                            <td>{% if team.grade %} {{team.grade}} {% endif %}</td>
+                                            <td>{% if team.gender %}{{team.gender|title}} {% endif %}</td>
+                                            <td>
+                                                <span class="table-action">
+                                                    <button class="table-trash" onclick="open_delete_modal('{{team.id}}', '{{team.name}}')">
+                                                        <img src="{% static "images/table/trash.png" %}">
+                                                    </button>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% comment %} 
+                                        {% for roster in event.rosters.all %}
+                                        <tr>
+                                            <td>{{forloop.counter}}</td>
+                                            <td>{{roster.name|title}}</td>
+                                            <td>
+                                                <span class="table-action">
+                                                    <button class="table-trash" onclick="open_delete_modal('{{roster.id}}', '{{roster.name}}')">
+                                                        <img src="{% static "images/table/trash.png" %}">
+                                                    </button>
+                                                </span>
+                                            </td>
+                                        </tr> {% endcomment %}
+
+                                        {% empty %}
+                                        <tr>
+                                        <td colspan="3" class="text-center text-muted">No check-in teams available. You can add a team for check-in.</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <a class="btn btn-black bg-black text-white fw-bold mb-2 ms-1" data-bs-toggle="modal" data-bs-target="#addteam">Add Team</a>
+                        </div>
+
+                        </div>
+                        </div>
+                    </div>
+                    {% comment %} end team {% endcomment %}
+
+                    <form action="{% url 'assign_sub_admin' event.id %}" method="POST">
+                      {% csrf_token %}
+
+                      <div class="modal fade" id="assignSubAdmin" tabindex="-1">
+                        <div class="modal-dialog modal-xl modal-dialog-centered">
+                          <div class="modal-content">
+
+                            <div class="modal-header">
+                              <h5 class="modal-title fw-bold">Choose Sub Admin</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <div class="modal-body table-blk">
+
+                              <table class="table">
+                                <thead class="table-light">
+                                  <tr>
+                                    <th>S.No</th>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Action</th>
+                                  </tr>
+                                </thead>
+
+                                <tbody>
+                                  {% for admin in sub_admins %}
+                                  <tr>
+                                    <td>
+                                        <input type="checkbox" name="sub_admin_ids" value="{{ admin.id }}"
+                                          {% if admin in event.sub_admins.all %} checked {% endif %}>
+
+                                    </td>
+
+                                    <td>{{ admin.first_name }} {{ admin.last_name }}</td>
+
+                                    <td>{{ admin.email }} ({{ admin.username }})</td>
+
+                                    <td>
+                                      <a href="{% url 'sub_admin_profile' pk=admin.id %}" class="table-eye">
+                                        <img src="{% static 'images/table/eye.png' %}">
+                                      </a>
+                                    </td>
+                                  </tr>
+                                  {% empty %}
+                                  <tr>
+                                    <td colspan="5" class="text-center text-muted">No Sub Admin Found</td>
+                                  </tr>
+                                  {% endfor %}
+                                </tbody>
+
+                              </table>
+
+                            </div>
+
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+                              <button type="submit" class="btn btn-black bg-black text-white fw-bold">
+                                Assign
+                              </button>
+                            </div>
+
+                          </div>
+                        </div>
+                      </div>
+
+                    </form>
+
+                    {% comment %} roster {% endcomment %}
+
+                      <div class="modal fade" id="roster" tabindex="-1" aria-labelledby="roster" aria-hidden="true">
+                       <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">All Check-in Roster</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+
+                        <div class="modal-body table-blk">
+                            <table class="display border-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>S.No</th>
+                                            <th>Roster Name</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% comment %} self checkin user {% endcomment %}
+                                        {% comment %} {% for team in event_teams %}
+                                        <tr>
+                                            <td>{{forloop.counter}}</td>
+                                            <td>{{team.name|title}}</td>
+                                            <td>
+                                                <span class="table-action">
+                                                    <button class="table-trash" onclick="open_delete_modal('{{team.id}}', '{{team.name}}')">
+                                                        <img src="{% static "images/table/trash.png" %}">
+                                                    </button>
+                                                </span>
+                                            </td>
+                                        </tr> {% endcomment %}
+                           
+                                        {% for roster in event.rosters.all %}
+                                        <tr>
+                                            <td>{{forloop.counter}}</td>
+                                            <td>{{roster.name|title}}</td>
+                                            <td>
+                                                <span class="table-action">
+                                                    <button class="table-trash" onclick="open_delete_modal('{{roster.id}}', '{{roster.name}}')">
+                                                        <img src="{% static "images/table/trash.png" %}">
+                                                    </button>
+
+                                                       <a href="{% url "roster_detail" pk=roster.id %}" class="table-eye">
+                                                            <img src="{% static "images/table/eye.png" %}">
+                                                        </a>
+                                                </span>
+                                            </td>
+                                        </tr> 
+
+                                        {% empty %}
+                                        <tr>
+                                        <td colspan="3" class="text-center text-muted">No check-in teams available. You can add a team for check-in.</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                        </div>
+                        </div>
+                    </div>
+                    {% comment %} end roster {% endcomment %}
+
+                    {% comment %} delete {% endcomment %}
+                        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to delete <strong id="delete_team_name">Unknown </strong>?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#team" >Cancel</button>
+                                    <a href="?action=delete&id=" class="btn btn-danger" id="team_delete_action_btn">Delete</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% comment %} end delete {% endcomment %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content%}
+
+{% block js %}
+<script>
+    function open_delete_modal(team_id, team_name){
+        document.getElementById("delete_team_name").innerText  = team_name;
+
+        let deleteBtn = document.getElementById("team_delete_action_btn");
+        deleteBtn.href = "?action=delete&id=" + team_id;
+
+        let teamModalEl = document.getElementById("team");
+        let teamModal = bootstrap.Modal.getInstance(teamModalEl);
+        if (teamModal) {
+            teamModal.hide();
+        }
+        let deleteModal = new bootstrap.Modal(document.getElementById("deleteModal"));
+        deleteModal.show();
+    }
+
+</script>
+{% endblock js %}

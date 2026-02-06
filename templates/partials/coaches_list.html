@@ -1,0 +1,41 @@
+{% load static %}
+
+{% for coach in coaches %}
+    <div class="list-group-item border rounded mb-2 coach-item">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center flex-grow-1">
+                <input class="form-check-input me-3" 
+                       type="checkbox" 
+                       value="{{ coach.id }}" 
+                       id="coach_{{ coach.id }}"
+                       name="coaches">
+                <label class="form-check-label flex-grow-1" 
+                       for="coach_{{ coach.id }}"
+                       style="cursor: pointer;">
+                    <div class="d-flex align-items-center">
+                        {% if coach.profile_pic %}
+                            <img src="{{ coach.profile_pic.url }}" 
+                                 class="rounded-circle me-2" 
+                                 style="width: 40px; height: 40px; object-fit: cover;"
+                                 alt="{{ coach.username }}">
+                        {% else %}
+                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2"
+                                 style="width: 40px; height: 40px;">
+                                <i class="fa-solid fa-user-tie"></i>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <div class="fw-semibold">{{ coach.username }}</div>
+                            <small class="text-muted">{{ coach.email }}</small>
+                        </div>
+                    </div>
+                </label>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <div class="text-center py-5">
+        <i class="fa-solid fa-user-slash fa-3x text-muted mb-3"></i>
+        <p class="text-muted mb-0">No coaches available</p>
+    </div>
+{% endfor %}

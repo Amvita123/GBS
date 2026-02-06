@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% load static %}
+{% load player_filters %}
+
+{% block title %}Organization Management{% endblock %}
+
+{% block nav_title %}
+    {% with page_title="Organization Management" %}
+        {{ block.super }}
+    {% endwith %}
+{% endblock nav_title %}
+
+{% block content %}
+    <section class="main-section spacer">
+        <div class="container">
+            
+            <!-- Header Actions -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <a href="{% url 'organization_management' %}" class="btn fw-semibold">
+                    <i class="fa-solid fa-arrow-left me-2"></i>Back
+                </a>
+                <a class="btn bg-black text-white fw-semibold px-4" 
+                   href="{% url 'organization_transaction_detail' pk=pk %}">
+                    <i class="fa-solid fa-receipt me-2"></i>Transactions
+                </a>
+            </div>
+
+            <!-- Organization Details Card -->
+            <div class="wrapper-card border border-1 p-0 mb-4">
+                <div class="row g-0">
+                    <div class="col-xl-12">
+                        <!-- Card Header with Logo -->
+                        <div class="sub_heading_card sub-heading d-flex justify-content-between align-items-center mb-0 p-4 border-bottom">
+                            <h2 class="mb-0 fw-bold">Organization Details</h2>
+                            <img src="{{ organization.logo.url }}"
+                                 class="org-logo rounded"
+                                 alt="{{ organization.name }}"
+                                 style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;"
+                                 data-bs-toggle="modal"
+                                 data-bs-target="#imageModal">
+                        </div>
+
+                        <!-- Organization Info -->
+                        <div class="p-4">
+                            <div class="row g-4">
+                                <!-- Left Column -->
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="mb-4">
+                                        <label class="text-muted small text-uppercase fw-semibold mb-2">Name</label>
+                                        <p class="fs-6 fw-semibold mb-0">{{ organization.name|title }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="mb-4">
+                                        <label class="text-muted small text-uppercase fw-semibold mb-2">Sport</label>
+                                        <p class="fs-6 fw-semibold mb-0">
+                                            {{ organization.sport.name|title }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="mb-4">
+                                        <label class="text-muted small text-uppercase fw-semibold mb-2">Total Rosters</label>
+                                        <p class="fs-6 fw-semibold mb-0">
+                                            <span class="badge bg-black text-white fs-6 px-3 py-2">
+                                                {{ organization.roster.all.count }}
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Biography - Full Width -->
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="text-muted small text-uppercase fw-semibold mb-2">Biography</label>
+                                        <div class="p-3 bg-light rounded border">
+                                            <p class="mb-0 lh-lg">
+                                                {{ organization.biograph|default:"No biography provided." }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rosters Table Card -->
+            <div class="wrapper-card border border-1 p-0">
+                <div class="row g-0">
+                    <div class="col-xl-12">
+                        <!-- Table Header -->
+                        <div class="sub_heading_card sub-heading mb-0 p-4 border-bottom">
+                            <h2 class="mb-0 fw-bold">
+                                Rosters
+                            </h2>
+                        </div>
+
+                        <!-- Table Content -->
+                        <div class="table-blk p-0">
+                            <div class="table-responsive">
+                                <table id="athletesTable" class="table table-hover border-0 mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th>S.No</th>
+                                            <th>Name</th>
+                                            <th>Grade</th>
+                                            <th>Players</th>
+                                            <th>Coaches</th>
+                                            <th>Created At</th>
+                                            <th>Created By</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for roster in organization.roster.all %}
+                                            <tr>
+                                                <td class="py-3 px-4 align-middle">
+                                                    <span class="text-muted">{{ forloop.counter }}</span>
+                                                </td>
+                                                <td class="py-3 px-4 align-middle">
+                                                    <span class="fw-semibold">{{ roster.name|title }}</span>
+                                                </td>
+                                                <td class="py-3 px-4 align-middle">
+                                                    <span class="badge bg-secondary">{{ roster.grade.name }}</span>
+                                                </td>
+                                                <td class="py-3 px-4 align-middle text-center">
+                                                    <span class="badge bg-dark text-white">
+                                                        {{ roster.roster_player.all.count }}
+                                                    </span>
+                                                </td>
+                                                <td class="py-3 px-4 align-middle text-center">
+                                                    <span class="badge bg-dark text-white">
+                                                        {{ roster.roster_coach.count }}
+                                                    </span>
+                                                </td>
+                                                <td class="py-3 px-4 align-middle">
+                                                    <span class="text-muted">
+                                                        {{ roster.created_at|date:"m-d-Y" }}
+                                                    </span>
+                                                </td>
+                                                <td class="py-3 px-4 align-middle">
+                                                    <span class="text-muted">{{ roster.organization.created_by.email }}</span>
+                                                </td>
+                                                <td class="py-3 px-4 align-middle text-center">
+                                                    <a href="{% url 'roster_detail' pk=roster.id %}" 
+                                                       class="btn btn-sm"
+                                                       title="View Details">
+                                                        <i class="fa-solid fa-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="8" class="text-center py-5">
+                                                    <div class="text-muted">
+                                                        <i class="fa-solid fa-inbox fa-3x mb-3 d-block"></i>
+                                                        <p class="mb-0">No rosters found for this organization.</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="p-3 border-top">
+                            {% include "pagination.html" with page_obj=followers %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="imageModalLabel">Organization Logo</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center">
+            <img src="" id="modalImage" class="img-fluid" alt="Organization Logo">
+          </div>
+        </div>
+      </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+
+    {% if organization.roster.all %}
+        $(document).ready(function() {
+            // Initialize DataTable if needed
+            $('#athletesTable').DataTable({
+                paging: false,
+                searching: false,
+                ordering: true,
+                info: false,
+                autoWidth: false,
+                order: [[0, 'asc']]
+            });
+
+            // Handle image click to show in modal
+            $('.org-logo').on('click', function() {
+                var imageUrl = $(this).attr('src');
+                $('#modalImage').attr('src', imageUrl);
+            });
+        });
+    {% endif %}
+    </script>
+{% endblock %}

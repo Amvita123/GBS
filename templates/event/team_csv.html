@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% load static %}
+{% load event_filters %}
+{% block title%} Events Management {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Events Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% block css %}
+<style>
+    img.rounded-circle {
+        width: 80px;
+        height: 80px; 
+        object-fit: cover; 
+    }
+
+    .table-danger {
+        --bs-table-bg: #f8d7da;
+        --bs-table-striped-bg: #f5c2c7;
+        --bs-table-striped-color: #000;
+        --bs-table-active-bg: #f1aeb5;
+        --bs-table-active-color: #000;
+        --bs-table-hover-bg: #f1aeb5;
+        --bs-table-hover-color: #000;
+        color: #000;
+        border-color: #f5c2c7;
+    }
+</style>
+{% endblock css %}
+
+{% block content %} 
+
+
+<section class="main-section spacer">
+    <div class="container">
+        <div class="wrapper-card p-0">
+            <div class="row gy-3">                            
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-box mb-3">
+                        <h2>Review the extracted data</h2>    
+                    </div>
+
+                    {% comment %} upload csv {% endcomment %}
+                      <div class="modal fade" id="uploadcsv" tabindex="-1" aria-labelledby="uploadcsv" aria-hidden="true">
+                        <form method="post" enctype="multipart/form-data" action="{% url 'insert_event_check_in_csv' pk=pk %}">
+                            {% csrf_token %}
+                            <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="uploadcsv">Upload CheckIn Data</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="col-12 my-3">
+                                        <label for="file" class="form-label">Select File</label>
+                                        <input type="file" class="form-control" name="file" id="file" placeholder="click here" accept=".csv" required>
+                                        <div class="text-danger">{{ form.file.errors }}</div>
+                                        <a class="text-info float-end" href="/static/check_sample_sheet.csv" download>Download sample ?</a>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addteam" style="background:#757575 !important">Cancel</button>
+                                    <button type="submit" class="btn bg-black text-white" name="uploadcsv" value="uploadcsv">Submit</button>
+                                </div>
+                            </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% comment %} end upload csv {% endcomment %}
+
+                   <form method="post" action="{% url 'event_check_csv_data' pk=pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="key" value="{{ key }}" required>
+                        <div class="table-blk">
+                            <table id="athletesTable" class="display border-0">
+                                <thead>
+                                    <tr>
+                                        <th>S.No</th>
+                                        <th>TeamName</th>
+                                        <th>FullName</th>
+                                        <th>Email</th>
+                                        <th>Username</th>
+                                        <th>Position</th>
+                                        <th>PlayingStyle</th>
+                                        <th>JerseyNo</th>
+                                        <th>Role</th>
+                                        <th>Messages</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in data %}
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="exclude_rows" title="Check to exclude" value="{{ forloop.counter0 }}">
+                                            {{ forloop.counter }}</td>
+                                        <td>{{ user.TeamName|title }}</td>
+                                        <td>{{ user.FirstName }} {{ user.LastName }}</td>
+                                        <td>{{ user.Email }}</td>
+                                        <td>{{ user.Username }}</td>
+                                        <td>{{ user.Position }}</td>
+                                        <td>{{ user.PlayingStyle }}</td>
+                                        <td>{{ user.JerseyNo }}</td>
+                                        <td>{{ user.Role }}</td>
+                                        <td>Ok</td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% for user in exclude_data %}
+                                     {% with row_number=forloop.counter|add:data_length %}
+                                    <tr class="table-danger">
+                                        <td>{{ row_number  }}</td>
+                                        <td>{{ user.TeamName|title }}</td>
+                                        <td>{{ user.FirstName }} {{ user.LastName }}</td>
+                                        <td>{{ user.Email }}</td>
+                                        <td>{{ user.Username }}</td>
+                                        <td>{{ user.Position }}</td>
+                                        <td>{{ user.PlayingStyle }}</td>
+                                        <td>{{ user.JerseyNo }}</td>
+                                        <td>{{ user.Role }}</td>
+                                        <td>
+                                             <button type="button" class="table-trash" data-bs-toggle="modal" data-bs-target="#deleteModal{{forloop.counter}}">
+                                              <i class="fas fa-circle-info text-danger fa-lg"></i>
+                                            </button>
+                                        </ul>
+                                        </td>
+
+                                        {% comment %} delete modal {% endcomment %}
+                                            <div class="modal fade" id="deleteModal{{forloop.counter}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                    <h5 class="modal-title" id="deleteModalLabel">Fix the errors for {{row_number}}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                       <ul class="mb-0">
+                                                        {% for message in user.message %}
+                                                            <li>{{ message|safe }}</li>
+                                                        {% empty %}
+                                                            <li class="text-muted">No templates available</li>
+                                                        {% endfor %}
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                                </div>
+                                            </div>
+                                        {% comment %} end model {% endcomment %}
+                                    </tr>
+                                    {% endwith %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="my-1 float-end">
+                            <button type="button" class="btn bg-black text-white my-3 me-1" data-bs-toggle="modal" data-bs-target="#uploadcsv">ReUpload</button>
+                            <button type="submit" class="btn bg-black text-white  my-3 me-1">Submit</button>
+                        </div>
+                    </form>
+                </div> 
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+{% endblock content %}
+
+{% block js %}
+<script>
+    $(document).ready(function () {
+        let table = $('#athletesTable').DataTable({
+            "paging": false,
+            "lengthChange": false,
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "dom": "lrtip",
+            "order": []  
+        });
+
+        
+        $('#searchInput').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+    
+        
+        $('#sortBy').on('change', function () {
+            let columnIndex = $(this).val();
+            if (columnIndex !== "") {
+                table.order([parseInt(columnIndex), 'asc']).draw();
+            }
+        });
+
+         
+    });
+</script>
+
+{% endblock %}
+

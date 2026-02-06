@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Discount Management{% endblock %}
+
+{% block nav_title %}
+    {% with page_title="Discount Management" %}
+        {{ block.super }}
+    {% endwith %}
+{% endblock nav_title %}
+
+{% block content %}
+<section class="main-section spacer">
+   <div class="container">
+      <div class="wrapper-card p-0">
+         <div class="row gy-3">
+
+            <div class="col-xl-12">
+                <div class="sub_heading_card sub-heading flex-box mb-3 align-items-center justify-content-between flex-wrap gap-3">
+                    <h2>Discount Code List</h2>
+                    <div class="d-flex flex-wrap gap-2">
+                        <form method="get" class="d-flex gap-2">
+                            <input type="text" name="q" id="searchInput" class="form-control" placeholder="Search..." style="width: 250px;" value="{{ query }}">
+<!--                            <button type="submit" class="btn border border-1" title="click to deep search"><i class="fa fa-search"></i></button>-->
+                            {% if query %}
+                                <a href="{% url 'discount_management' %}" class="btn border border-1 bg-dark text-white" title="clear search">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </a>
+                            {% endif %}
+                        </form>
+                        <a href="{% url 'create_discount_code' %}" class="btn bg-black text-white fw-bold">
+                            Create New Code
+                        </a>
+                    </div>
+                </div>
+
+               <div class="table-blk">
+                  <table id="discountTable" class="table border-0">
+                     <thead>
+                        <tr>
+                           <th>S.No</th>
+                           <th>Code</th>
+                           <th>Usage Limit</th>
+                           <th>Code Value</th>
+                           <th>Current Usage</th>
+                           <th>Status</th>
+                           <th>Actions</th>
+                        </tr>
+                     </thead>
+
+                     <tbody>
+                        {% for code in codes %}
+                        <tr>
+                           <td>{{ forloop.counter }}</td>
+                           <td>{{ code.code_identifier }}</td>
+                           <td>{{ code.usage_limit }}</td>
+                           <td>{{ code.code_value }}</td>
+                           <td>{{ code.current_usage }}</td>
+
+                           <td>
+                               {% if code.is_active %}
+                                   <span class="table-status badge bg-light text-success">Active</span>
+                               {% else %}
+                                   <span class="table-status badge bg-light text-danger">Deactivate</span>
+                               {% endif %}
+                           </td>
+
+                           <td>
+                               <span class="table-action d-flex align-items-center gap-2">
+
+                                   <a href="{% url 'usage_report' code.id %}" class="table-eye">
+                                       <img src="{% static 'images/table/eye.png' %}">
+                                   </a>
+
+                                   <a href="{% url 'edit_discount_code' code.id %}" class="table-eye">
+                                       <img src="{% static 'images/edit.png' %}">
+                                   </a>
+
+                                   <button class="table-trash" data-bs-toggle="modal" data-bs-target="#deleteModal{{code.id}}">
+                                        <img src="{% static 'images/table/trash.png' %}">
+                                   </button>
+
+
+                                   {% if request.user.is_superuser or request.user.user_role == "ar_staff" %}
+                                       {% if code.is_active %}
+                                           <span class="table-check" data-bs-toggle="modal" data-bs-target="#deactiveModal{{code.id}}">
+                                               <img src="{% static 'images/table/checked.png' %}">
+                                           </span>
+                                       {% else %}
+                                           <span class="table-check" data-bs-toggle="modal" data-bs-target="#activeModal{{code.id}}">
+                                               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                                   <rect width="24" height="14" x="0" y="5" rx="7" ry="7" fill="#ccc"/>
+                                                   <circle cx="7" cy="12" r="5" fill="#fff"/>
+                                               </svg>
+                                           </span>
+                                       {% endif %}
+                                   {% endif %}
+
+                               </span>
+                           </td>
+                        </tr>
+
+                        <div class="modal fade" id="deactiveModal{{code.id}}" tabindex="-1" aria-labelledby="deactiveModalLabel{{code.id}}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deactiveModalLabel{{code.id}}">Confirm Deactivation</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Are you sure you want to deactivate {{code.code_identifier}} Code?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <a href="?action=deactivate&id={{code.id}}&page={{page_number}}{% if query %}&q={{query}}{% endif %}" class="btn btn-warning text-white">Deactivate</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="activeModal{{code.id}}" tabindex="-1" aria-labelledby="activeModalLabel{{code.id}}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="activeModalLabel{{code.id}}">Confirm Activation</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Are you sure you want to activate {{code.code_identifier}} Code?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <a href="?action=activate&id={{code.id}}&page={{page_number}}{% if query %}&q={{query}}{% endif %}" class="btn btn-success">Activate</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="deleteModal{{code.id}}" tabindex="-1" aria-labelledby="deleteModalLabel{{code.id}}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteModalLabel{{code.id}}">Confirm Deletion</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Are you sure you want to delete {{code.code_identifier}} Code?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <a href="?action=delete&id={{code.id}}&page={{page_number}}{% if query %}&q={{query}}{% endif %}" class="btn btn-danger">Delete</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% empty %}
+                        <tr>
+                           <td colspan="7" class="text-center text-secondary">
+                              No discount codes found.
+                           </td>
+                        </tr>
+                        {% endfor %}
+                     </tbody>
+                  </table>
+               </div>
+
+               {% comment %} pagination {% endcomment %}
+               {% include "pagination.html" with page_obj=codes %}
+               {% comment %} {% endcomment %}
+
+            </div>
+         </div>
+      </div>
+   </div>
+</section>
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function () {
+        let table = $('#discountTable').DataTable({
+            paging: false,
+            lengthChange: false,
+            searching: true,
+            ordering: true,
+            info: false,
+            autoWidth: false,
+            dom: "lrtip",
+            order: [],
+            columnDefs: [
+                { targets: 2, type: "num" },
+                { targets: 3, type: "num" },
+                { targets: 4, type: "num" }
+            ]
+        });
+
+        const columnMap = {
+            "code": 1,
+            "usage_limit": 2,
+            "code_value": 3,
+            "current_usage": 4,
+            "status": 5
+        };
+
+        $('#searchInput').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+
+        $('#sortBy').on('change', function () {
+            let selected = $(this).val();
+            let columnIndex = columnMap[selected];
+
+            if (columnIndex !== undefined) {
+                table.order([columnIndex, 'asc']).draw();
+            }
+        });
+    });
+</script>
+{% endblock %}

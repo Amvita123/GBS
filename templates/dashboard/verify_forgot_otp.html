@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+
+    <style>
+        .otp-success{
+            color: green;
+            font-size: 14px;
+            margin-top: 6px;
+            text-align:center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="main_container">
+
+    <div class="banner-side d-none d-md-block">
+        <div class="logo d-none d-md-block">
+            <img src="{% static 'logo.png' %}" width="100">
+        </div>
+        <img src="{% static 'images/login.png' %}" class="hero-image">
+    </div>
+
+    <div class="form-side">
+        <div class="mobile_logo d-block d-md-none">
+            <img src="{% static 'logo.png' %}" width="100">
+        </div>
+
+        <form class="login-form" method="post">
+            {% csrf_token %}
+
+            <h1 class="fw-bold">Verify OTP</h1>
+
+            <p class="welcome-text text-center mb-2">
+                OTP sent {{ email }}
+            </p>
+
+            <div class="form-group">
+                <label>Enter OTP</label>
+                <div class="input-wrapper">
+                    <input type="text" name="otp" placeholder="Please enter OTP here" required>
+                </div>
+
+                {% for message in messages %}
+                    <small class="text-danger error-text">
+                        {{ message }}
+                    </small>
+                {% endfor %}
+
+            </div>
+
+            <a href="{% url 'resend_otp' %}" class="forgot-password">Resend OTP</a>
+
+            <button type="submit" class="login-button">
+                Verify OTP
+            </button>
+
+            <a href="{% url 'forgot_password' %}" class="forgot-password">
+                Change email
+            </a>
+
+        </form>
+    </div>
+</div>
+</body>
+</html>

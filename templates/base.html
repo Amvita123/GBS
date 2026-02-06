@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+    {% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} Admin Dashboard{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'images/favicon-96x96.png' %}" sizes="96x96">
+    <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png' %}">
+    <link rel="manifest" href="{% static 'site.webmanifest' %}">
+    {% include 'css.html' %} {% block css %} {% endblock %}
+
+</head>
+
+    <style>
+.form-check-input:checked {
+    background-color: black !important;
+    border-color: black !important;
+}
+</style>
+
+<body>
+
+    {% include 'sidebar.html' %}
+    
+    <div class="main-wrapper">  
+        <div class="content-wrapper">
+
+        {% block nav_title%}
+           {% include 'navbar.html' with page_title=page_title %}
+        {% endblock%}
+        {% if messages %}
+        
+        <section class="main-section spacer">
+            <div class="container">
+                <div class="container">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-2" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+      
+    {% endif %}
+    
+        {% block content %}
+
+        {% endblock %}
+        </div>
+      </div>
+    {% include 'js.html' %}
+    {% block js %} {% endblock %}
+</body>
+</html>

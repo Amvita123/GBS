@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% load static %}
+{% load event_filters %}
+{% block title%} Organization Management {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Organization Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% block css %}
+<style>
+    img.rounded-circle {
+        width: 80px;
+        height: 80px; 
+        object-fit: cover; 
+    }
+</style>
+{% endblock css %}
+
+{% block content %} 
+
+
+<section class="main-section spacer">
+    <div class="container">
+        <div class="wrapper-card p-0">
+            <div class="row gy-3">
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-box mb-3">
+                        <h2>Roster Grade List</h2>
+                        <div class="float-end">
+                         <div class="d-flex">
+                             <a href="{% url 'organization_management' %}" class="btn fw-bold ms-2 bg-black text-white">Organizations</a>
+                             <a class="btn fw-bold ms-2 bg-black text-white" data-bs-toggle="modal" data-bs-target="#addplan">Add grade</a>
+                               {% comment %} add plan {% endcomment %}
+                                <div class="modal fade" id="addplan" tabindex="-1" aria-labelledby="addplan" aria-hidden="true">
+                                    <form method="post" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                            <h5 class="modal-title" id="HyperModalLabel">Add new grade</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+
+                                                <div class="col-12 my-3">
+                                                    <label for="name" class="form-label">Name</label>
+                                                    <input type="text" class="form-control" name="name" id="name" placeholder="2025" required>
+                                                    <div class="text-danger">{{ form.name.errors }}</div>
+                                                </div>
+
+                                            </div>
+
+                                            <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background:#757575 !important">Cancel</button>
+                                            <button type="submit" class="btn bg-black text-white">Add</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    </div>
+                                </div>
+                                {% comment %} end plan {% endcomment %}
+                          </div>
+                        </div>
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="display border-0">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Name </th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for grade in grades %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{grade.name}}</td> 
+                                    <td>
+                                        <span class="table-action">
+                                            <a class="table-eye" data-bs-toggle="modal" data-bs-target="#editplan{{grade.id}}">
+                                                <img src="{% static "images/edit.png" %}">
+                                            </a>
+                                            <button class="table-trash" data-bs-toggle="modal" data-bs-target="#deleteModal{{grade.id}}">
+                                              <img src="{% static "images/table/trash.png" %}">
+                                            </button>
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% comment %} delete modal {% endcomment %}
+                                <div class="modal fade" id="deleteModal{{grade.id}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                      <div class="modal-content">
+                                        <div class="modal-header">
+                                          <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete <strong>{{grade.name}} </strong>?
+                                        </div>
+                                        <div class="modal-footer">
+                                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                          <a href="?action=delete&id={{grade.id}}&page={{page_number}}" class="btn btn-danger" >Delete</a>
+                                        </div>
+                                      </div>
+                                    </div>
+                                </div>
+
+                                 {% comment %} edit plan model {% endcomment %}
+                                <div class="modal fade" id="editplan{{grade.id}}" tabindex="-1" aria-labelledby="addplan" aria-hidden="true">
+                                    <form method="post" action="{% url 'edit_roster_grade' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" value="{{grade.id}}" name="id" required>
+                                        <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                            <h5 class="modal-title" id="HyperModalLabel">Update grade {{grade.name}}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+                                                <div class="col-12 my-3">
+                                                    <label for="name" class="form-label">Name</label>
+                                                    <input type="text" class="form-control" name="name" id="name_edit_{{grade.id}}" value="{{grade.name}}" required>
+                                                    <div class="text-danger">{{ form.name.errors }}</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background:#757575 !important">Cancel</button>
+                                            <button type="submit" class="btn bg-black text-white" name="update_plan" value="Update">Update</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    </div>
+                                </div>
+                                {% comment %} end plan {% endcomment %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% comment %} pagination {% endcomment %}
+                    {% include "pagination.html" with page_obj=events %}
+                    {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+{% endblock content %}
+
+{% block js %}
+<script src="{% static "js/event_plan.js" %}"></script>
+<script>
+    {% if edit_model_open %}
+    document.getElementById("name_edit_{{grade_id}}").value = "{{form_name}}";
+       var modalElement = document.getElementById("editplan{{grade_id}}");
+        var myModal = new bootstrap.Modal(modalElement);
+        myModal.show();
+    {% elif open_add_modal %}
+         var modalElement = document.getElementById("addplan");
+        var myModal = new bootstrap.Modal(modalElement);
+        myModal.show();
+    {% endif %}
+</script>
+{% endblock %}

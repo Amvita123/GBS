@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% load static %}
+{% load event_filters %}
+{% block title%} Events Management {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Events Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% block content %}
+
+<section class="main-section spacer">
+    <div class="container">
+        {% comment %} <div class="row">
+            <div class="col">
+                <a href="{% url 'create_event' %}" class="btn fw-bold my-3 bg-black text-white float-end"> Create Event</a>
+            </div>
+        </div> {% endcomment %}
+        <div class="wrapper-card p-0">
+            <div class="row gy-3">
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-wrap gap-3 flex-box mb-3">
+                        <h2>Events List</h2>
+                        <div class="d-flex flex-wrap gap-3">
+                           <div class="d-flex">
+                                <input type="text" id="searchInput" class="form-control" placeholder="Search..." >
+                                <div class="sort-by ms-1">
+                                    <select class="form-select" id="sortBy">
+                                        <option value="" disabled selected>Sort by</option>
+                                        <option value="0">Event Name</option>
+                                        <option value="1">Hyperlink</option>
+                                        <option value="2">Date</option>
+                                        <option value="3">Status</option>
+                                    </select>
+                                </div>
+                            </div>
+                             <div class="hstack flex-wrap gap-2">
+                                {% if request.user.is_superuser or request.user.user_role == "ar_staff" %}
+                                <a href="{% url 'event_plan' %}" class="btn fw-bold bg-black text-white"> Plans</a>
+                                {% endif %}
+                                {% if perms.users.edit_events %}
+                                <a href="{% url 'create_event' %}" class="btn fw-bold bg-black text-white"> Create Event</a>
+                                {% endif %}
+                             </div>
+                        </div>
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="table border-0">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Event Name </th>
+                                    <th>Image</th>
+                                    <th>Hyperlink</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in events %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{event.name|title}}</td>
+                                    <td>
+                                        <span class="table_img">
+                                            {% if event.logo %} <img src="{{event.logo.url}}" class="rounded-circle"> {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn border border-1 ms-1 bg-dark text-white" data-bs-toggle="modal" data-bs-target="#HyperModal{{event.id}}"
+                                        title="view booking links">
+                                              <i class="fa-solid fa-link"></i>
+                                        </button>
+                                    </td>
+                                    <td>{{event.date|date:"m-d-Y h:i A"}}</td>
+                                    <td>
+                                    {% if event.end_date %}
+                                        {% with status=event.end_date|get_event_status %}
+                                            {% if status == "upcoming" %}
+                                                <span class="table-status badge bg-light text-success">{{ status }}</span>
+                                            {% else %}
+                                                <span class="table-status badge bg-light text-primary">{{ status }}</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% else %}
+                                        {% with status=event.date|get_event_status %}
+                                            {% if status == "upcoming" %}
+                                                <span class="table-status badge bg-light text-success">{{ status }}</span>
+                                            {% else %}
+                                                <span class="table-status badge bg-light text-primary">{{ status }}</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% endif %}
+                                </td>
+
+                                    <td>
+                                        <span class="table-action">
+                                            <a href="{% url "event_detail" pk=event.id %}" class="table-eye">
+                                                <img src="{% static "images/table/eye.png" %}">
+                                            </a>
+                                            {% if perms.users.edit_events %}
+                                            <a href="{% url 'event_edit' pk=event.id %}" class="table-eye">
+                                                <img src="{% static "images/edit.png" %}">
+                                            </a>
+                                            {% endif %}
+                                            <button class="table-trash" data-bs-toggle="modal" data-bs-target="#deleteModal{{event.id}}">
+                                              <img src="{% static "images/table/trash.png" %}">
+                                            </button>
+
+                                            <a href="{% url 'event_duplicate' pk=event.id %}"
+                                               class="table-eye duplicate-btn"
+                                               title="Duplicate Event"
+                                               data-event-id="{{event.id}}">
+                                                {% if 'copy' in event.name|lower %}
+                                                    <img src="{% static 'images/copy.png' %}" class="copy-icon-empty" style="display:none;">
+                                                    <img src="{% static 'images/copy filled.png' %}" class="copy-icon-filled">
+                                                {% else %}
+                                                    <img src="{% static 'images/copy.png' %}" class="copy-icon-empty">
+                                                    <img src="{% static 'images/copy filled.png' %}" class="copy-icon-filled" style="display:none;">
+                                                {% endif %}
+                                            </a>
+
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% comment %} delete modal {% endcomment %}
+                                <div class="modal fade" id="deleteModal{{event.id}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                      <div class="modal-content">
+                                        <div class="modal-header">
+                                          <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete <strong>{{event.name}} </strong>?
+                                        </div>
+                                        <div class="modal-footer">
+                                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                          <a href="?action=delete&id={{event.id}}&page={{page_number}}" class="btn btn-danger" >Delete</a>
+                                        </div>
+                                      </div>
+                                    </div>
+                                </div>
+                                {% comment %} hyperlink model {% endcomment %}
+                                <div class="modal fade" id="HyperModal{{event.id}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                      <div class="modal-content">
+                                        <div class="modal-header">
+                                          <h5 class="modal-title" id="HyperModalLabel">Booking HyperLinks</h5>
+                                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+
+                                        <div class="modal-body">
+                                            {% for label, link in event.booking_link.items %}
+                                            <div>
+                                                {{forloop.counter}}) <a href="{{link}}" target="_blank" title="click to open" class="text-primary">{{label}}</a>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+
+                                        <div class="modal-footer">
+                                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                </div>
+                                {% comment %} end model {% endcomment %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% comment %} pagination {% endcomment %}
+                    {% include "pagination.html" with page_obj=events %}
+                    {% comment %}  {% endcomment %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+{% endblock content %}
+
+{% block js %}
+<script>
+    $(document).ready(function () {
+        let table = $('#athletesTable').DataTable({
+            "paging": false,
+            "lengthChange": false,
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "dom": "lrtip",
+            "order": []
+        });
+
+
+        $('#searchInput').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+
+
+        $('#sortBy').on('change', function () {
+            let columnIndex = $(this).val();
+            if (columnIndex !== "") {
+                table.order([parseInt(columnIndex), 'asc']).draw();
+            }
+        });
+
+        $('.duplicate-btn').on('click', function(e) {
+            let $this = $(this);
+            $this.find('.copy-icon-empty').hide();
+            $this.find('.copy-icon-filled').show();
+        });
+
+
+    });
+</script>
+
+{% endblock %}
+

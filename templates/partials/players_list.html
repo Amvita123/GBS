@@ -1,0 +1,44 @@
+{% load static %}
+{% load user_filters%}
+{% for player in players %}
+ {% get_verification player as verification %}
+
+    <div class="list-group-item border rounded mb-2">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center flex-grow-1">
+                <input class="form-check-input me-3" 
+                    type="checkbox" 
+                    value="{{ player.id }}" 
+                    id="player_{{ player.id }}"
+                    name="players">
+                <label class="form-check-label flex-grow-1" 
+                    for="player_{{ player.id }}"
+                    style="cursor: pointer;">
+                    <div class="d-flex align-items-center">
+                    
+                        {% if verification.photo %}
+                            <img src="{{ verification.photo.url }}" 
+                                class="rounded-circle me-2" 
+                                style="width: 40px; height: 40px; object-fit: cover;"
+                                alt="{{ player.username }}">
+                        {% else %}
+                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2"
+                                style="width: 40px; height: 40px;">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <div class="fw-semibold">{{verification.legal_full_name|title}}</div>
+                            <small class="text-muted">{{ player.email }}</small>
+                        </div>
+                    </div>
+                </label>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <div class="text-center py-5">
+        <i class="fa-solid fa-user-slash fa-3x text-muted mb-3"></i>
+        <p class="text-muted mb-0">No players available</p>
+    </div>
+{% endfor %}

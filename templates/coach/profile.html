@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Coach profile {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Coach Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+{% block content %} 
+{% load player_filters %}
+<section class="main-section spacer">
+    <div class="container">
+        <a href="{% url 'coach_management' %}" class="btn fw-bold mb-2 ms-1"> <i class="fa-solid fa-arrow-left"></i> Back</a>
+        <div class="wrapper-card border border-1 p-0">
+            <div class="row gy-3 ">                            
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-box mb-0">
+                        <h2>Coach Details</h2>                                
+                    </div>                 
+                </div> 
+            </div>
+            <div class="row">
+                <div class="col-xxl-11">
+                    <div class="detail_wrapper_card">
+                        <div class="row gy-3 gx-4 gx-xxl-5">
+                            <div class="col-md-6 col-lg-6">
+                                <div class="common-statistics">
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">First Name</h2>
+                                        <p class="mb-0">{{coach.first_name}}</p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Last Name</h2>
+                                        <p class="mb-0">{{coach.last_name}}</p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Email Address</h2>
+                                        <p class="mb-0">{{coach.email}}</p>
+                                    </div>
+
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">UserName</h2>
+                                        <p class="mb-0">{{coach.username}}</p>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-6">
+                                <div class="common-statistics">
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">School</h2>
+                                        <p class="mb-0">{{coach.school_name}}</p>
+                                    </div>
+
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Position</h2>
+                                        <p class="mb-0">{{coach.get_position_display }}</p>
+                                    </div>
+                                 
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+           </div>
+        </div>
+
+        <h3 class="fw-border my-3 ms-2"> Posts</h3>
+        <div class="wrapper-card border border-1">
+            <div class="row">  
+                {% for post in posts %}
+                 {% comment %}  {% endcomment %}
+                 <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="post_card p-0 bg-white">
+                        <div class="post_header top-heading d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-3">
+                                <div>
+                                    {% if post.user.profile_pic %}
+                                    <img src="{{post.user.profile_pic.url}}" class="img-fluid rounded-circle border shadow-sm" style="width: 60px; height: 60px; object-fit: cover;">
+                                    {% else %}
+                                    <img src="{% static 'images/user.png' %}" class="img-fluid rounded-circle border shadow-sm" style="width: 60px; height: 60px; object-fit: cover;">
+                                    {% endif %}
+                                </div>
+                                <div class="post_user_title">
+                                    <h5 class="fw-bold mt-3 mb-0 medium">{{post.user.get_full_name|title}}</h5>
+                                    <p class="text-muted small">{{post.created_at}}</p>
+                                </div>
+                            </div>
+                            <h3>
+                                <img src="{% static 'images/table/eye.png' %}" data-bs-toggle="modal" data-bs-target="#post{{post.id}}">
+                            </h3>
+                        </div>
+                        <div class="post_img">
+                            {% comment %} <img src="{{post.file.url}}" alt="Post Image" /> {% endcomment %}
+                            {% if post.file.url|is_video %}
+                                <video controls>
+                                    <source src="{{ post.file.url }}" type="{{ post.file.url|video_mime_type }}" alt="Post Video">
+                                    Your browser does not support the video tag.
+                                </video>
+                            {% else %}
+                                <img src="{{ post.file.url }}" alt="Post Image"/>
+                            {% endif %}
+                        </div>
+                        <div class="post_info"> 
+                            <div class="post_tags">
+                                <div class="d-flex justify-content-between">
+                                    <div class="d-flex align-items-center gap-3">
+                                        {% comment %} <i class="far fa-heart"></i>
+                                        <i class="far fa-comment"></i>
+                                        <i class="far fa-paper-plane"></i> {% endcomment %}
+                                        <h6 class="fw-bold">{% if post.comments.all|length > 0 %}  {{post.comments.all|length}} Comments {% else %} Not comment yet.
+                                        {% endif %}</h6>
+                                    </div>
+    
+                                   {% if post.tags.all %}
+                                    <div class="d-flex align-items-center gap-2">
+                                        <ul class="list-unstyled users-list m-0 avatar-group d-flex align-items-center">
+                                            {% for tag in post.tags.all|slice:":3" %}    
+    
+                                            <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up"
+                                             title="{{tag.username}}" data-bs-original-title="{{tag.username}}">
+                                                {% if tag.profile_pic %}
+                                                <img src="{{tag.profile_pic.url}}" style="width: 28px; height: 28px;" alt="E" class="rounded-circle">
+                                                {% else %}
+                                                <img src="{% static 'images/user.png' %}" style="width: 28px; height: 28px;" alt="E" class="rounded-circle">
+                                                {% endif %}
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% if post.tags.all|length > 3 %}
+                                         <span>Others + {{post.tags.all|length|add:"-3"}}</span>
+                                        {% endif %}
+                                    </div>
+                                   {% endif%}
+                                </div>
+                                {% comment %} <h6 class="fw-bold">{% if post.comments.all|length > 0 %}  {{post.comments.all|length}} Comments {% else %} Not comment yet.
+                                     {% endif %}</h6> {% endcomment %}
+                            </div>
+                            <div class="post_badges">
+                                {% if post.badges_objects %}
+                                <div class="d-flex justify-content-between mb-2">
+                                  {% for badge in post.badges_objects%}
+                                    <div>
+                                        <p class="mb-0 fw-bold">{{badge.badge.name}}</p>
+                                    </div>
+                                   {% endfor %}
+                                </div>
+                               {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                  {% comment %}  {% endcomment %}
+                  {% comment %} post modal {% endcomment %}
+                  <div class="modal common-modal modal-sm fade" id="post{{post.id}}" tabindex="-1" aria-labelledby="assignJerseyModal" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2 class="modal-title text-center w-100">Post</h2>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                            <div class="modal-body pb-3">
+                                <div class="team-statistics w-100 mt-3">
+                                    <div class="row g-3"> 
+                                        <div class="col-12">
+                                            <div class="top-heading d-flex justify-content-between mb-2">
+                                                <div class="d-flex">
+                                                    <div>
+                                                        {% if post.user.profile_pic %}
+                                                        <img src="{{post.user.profile_pic.url}}" class="img-fluid rounded-circle border shadow-sm" style="width: 60px; height: 60px; object-fit: cover;">
+                                                        {% else %}
+                                                        <img src="{% static 'images/user.png' %}" class="img-fluid rounded-circle border shadow-sm" style="width: 60px; height: 60px; object-fit: cover;">
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="mt-1 ms-2">
+                                                        <h5 class="fw-bold mb-0">{{post.user.get_full_name|title}}</h5>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-sm-12">
+                                            {% comment %} <img src="{{post.file.url}}" alt="Post Image" style="width:28rem"/> {% endcomment %}
+                                            {% if post.file.url|is_video %}
+                                            <video controls style="width: 28rem;" class="post_video">
+                                                <source src="{{ post.file.url }}" type="{{ post.file.url|video_mime_type }}" alt="Post Video">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                            {% else %}
+                                                <img src="{{ post.file.url }}" alt="Post Image" style="width:28rem;" />
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-12 mt-3">
+                                            <div class="d-flex justify-content-between">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="far fa-heart me-3"></i>
+                                                    <i class="far fa-comment me-3"></i>
+                                                    <i class="far fa-paper-plane"></i>
+                                                </div>
+
+                                               {% if post.tags.all %}
+                                                <div class="d-flex">
+                                                    <ul class="list-unstyled users-list m-0 avatar-group d-flex align-items-center">
+                                                        {% for tag in post.tags.all|slice:":3" %}
+                
+                                                        <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" 
+                                                        class="avatar avatar-xs pull-up mb-1" title="{{tag.username}}" data-bs-original-title="{{tag.username}}">
+                                                            <a href="#">
+                                                            {% if tag.profile_pic %}
+                                                            <img src="{{tag.profile_pic.url}}" style="width: 28px; height: 28px;" alt="E" class="rounded-circle">
+                                                            {% else %}
+                                                            <img src="{% static 'images/user.png' %}" style="width: 28px; height: 28px;" alt="E" class="rounded-circle">
+                                                            {% endif %}
+                                                           </a>
+                                                        </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                    {% if post.tags.all|length > 3 %}
+                                                     Others + {{post.tags.all|length|add:"-3"}}
+                                                    {% endif %}
+                                                </div>
+                                               {% endif%}
+                                            </div>
+                                            <h6 class="fw-bold">{% if post.comments.all|length > 0 %}  {{post.comments.all|length}} Comments {% else %}
+                                                 Not comment yet. {% endif %}</h6>
+                                        </div>
+                                        <div class="col-12">
+                                            {% if post.badges_objects %}
+                
+                                            <div class="d-flex justify-content-between">
+                                              {% for badge in post.badges_objects%}
+                                                <div>
+                                                    <p class="mb-1 fw-bold">{{badge.badge.name}}</p>
+                                                </div>
+                                               {% endfor %}
+                                            </div>
+                                           {% endif %}
+                
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            <!-- Modal footer -->
+    
+                            <div class="modal-footer d-flex justify-content-center border-0 pb-4">
+                                <a href="{%url 'coach_management' %}?action=deactivate&id={{coach.id}}"  class="btn btn-dark bg-black" >Deactivate User Account</a>
+                                <a href="?action=delete_post&id={{post.id}}" class="btn btn-white border border-1 border-light">
+                                    <i class="fa-solid fa-trash-can text-danger"></i>
+                                </a>
+                            </div>
+                            
+                        </div>
+                      </div>
+                </div>
+                  {% comment %}  {% endcomment %}
+              {% empty %}
+              <h2 class="h5 text-center mb-0">Not posted yet.</h2>
+              {% endfor  %}
+            </div>
+        </div>
+
+          {% comment %} flowers {% endcomment %}
+          <div class="wrapper-card border border-1 p-0 pb-3">
+            <div class="row gy-3">                            
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-box mb-0">
+                        <h2>Followers({{followers|length}})</h2>                                
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="display border-0">
+                            <thead>
+                                <tr>
+                                    <th>First Name </th>
+                                    <th>Last Name</th>
+                                    <th>User Name</th>
+                                    <th>User Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in followers %}
+                                <tr>
+                                    <td>{{user.follower.first_name|title}}</td>
+                                    <td>{{user.follower.last_name|title}}</td>
+                                    <td>{{user.follower.username}}</td>
+                                    <td>{{user.follower.user_role}}</td>
+                             
+                                </tr>
+                                {% endfor %}
+                                                                      
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% comment %} pagination {% endcomment %}
+                     {% include "pagination.html" with page_obj=followers %} 
+                    
+                      {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+        {% comment %} end flowers {% endcomment %}
+
+         {% comment %} following {% endcomment %}
+        <div class="wrapper-card border border-1 p-0 pb-3">
+            <div class="row gy-3">                            
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-box mb-0">
+                        <h2>Followings ({{following|length}})</h2>                                
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="display border-0">
+                            <thead>
+                                <tr>
+                                    <th>First Name </th>
+                                    <th>Last Name</th>
+                                    <th>User Name</th>
+                                    <th>User Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in following %}
+                                <tr>
+                                    <td>{{user.following.first_name|title}}</td>
+                                    <td>{{user.following.last_name|title}}</td>
+                                    <td>{{user.following.username}}</td>
+                                    <td>{{user.following.user_role}}</td>
+                             
+                                </tr>
+                                {% endfor %}                                          
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% comment %} pagination {% endcomment %}
+                    {% include "pagination.html" with page_obj=following %} 
+                    
+                      {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+        {% comment %} end following {% endcomment %}
+
+    </div>
+
+
+</section>
+
+
+{% endblock %}
+
+{% block js %}
+
+{% endblock %}

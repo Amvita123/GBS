@@ -1,0 +1,785 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Athlete {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Athlete Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% block css %}
+<style>
+    ol {
+        list-style-type: none;
+        padding-left: 0; 
+    }
+    .content-tabs .nav-item{
+
+    }
+</style>
+{% endblock %}
+
+{% block content %} 
+{% load player_filters %}
+{% load user_filters %}
+{% check_subscription request.user as admin_subscription %}
+<section class="main-section spacer">
+    <div class="container">
+        <a href="{% url 'athlete_management' %}{% if request.GET.from %}?from={{request.GET.from }}&to={{request.GET.to}} {% endif %}" class="btn fw-bold mb-2 ms-1"> 
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </a>
+        <div class="wrapper-card border border-1 p-0">
+            <div class="row gy-3 ">
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-wrap gap-3 flex-box mb-0">
+                        <h2>Athletes List</h2>
+                        <div class="hstack flex-wrap gap-2">
+                            <button class="btn btn-dark me-2" data-bs-toggle="modal" data-bs-target="#Password">Send Password</button>
+                            {% if request.user.is_superuser or request.user.user_role == "ar_staff" or admin_subscription %}
+                            <button class="btn btn-dark me-2" data-bs-toggle="modal" data-bs-target="#assignBadgeModal">Assign Badges</button>
+                            <button class="btn btn-outline-dark me-2" data-bs-toggle="modal" data-bs-target="#assignJerseyModal">Assign Jersey Number</button>
+                            {% else %}
+                            <a class="btn btn-outline-dark me-2"  href="{% url 'subscription' %}">Upgrade</button>
+                            {% endif %}
+                            <button id="backBtn1" type="button" class="btn btn-dark" style="display: none;" onclick='GoBack()'>
+                                Back CheckIn
+                            </button>
+                              {% comment %}  {% endcomment %}
+                                <div class="modal fade" id="Password" tabindex="-1" aria-labelledby="Password" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                        <h5 class="modal-title">Confirm Resend Passowrd</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            When you send the new password, the player's password will be updated immediately, and they will no longer be able to log in using their
+                                            old password. Are you sure ?
+                                        </div>
+                                        <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                                        <a href="{% url 'resend_password' pk=athlete.id %}" class="btn btn-dart bg-danger text-white">Yes</a>
+                                        </div>
+                                    </div>
+                                    </div>
+                                </div>
+                                {% comment %}  {% endcomment %}
+                        </div>
+                    </div>
+                </div> 
+            </div>
+
+            <div class="row">
+                <div class="col-xxl-11">
+                    <div class="detail_wrapper_card">
+                        <div class="row gy-3 gx-4 gx-xxl-5">
+                            <div class="col-md-6 col-lg-6">
+                                <div class="common-statistics">
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">First Name</h2>
+                                        <p class="mb-0">{{athlete.first_name}}</p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Last Name</h2>
+                                        <p class="mb-0">{{athlete.last_name}}</p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">DOB</h2>
+                                        <p class="mb-0">{% if athlete.dob %} {{athlete.dob|date:"m-d-Y"}} {% else %} N/A{% endif%}</p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Email Address</h2>
+                                         {% if request.user.is_superuser or request.user.user_role == "ar_staff" or admin_subscription %}
+                                        <p class="mb-0">{{athlete.email}}</p>
+                                        {% else %}
+                                        <p class="mb-0" title="Upgrade your account to see email">************</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">UserName</h2>
+                                        <p class="mb-0">{{athlete.username}}</p>
+                                    </div>
+
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Position</h2>
+                                        <p class="mb-0">{{athlete.player_profile.position.name}}</p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Playing Style</h2>
+                                        <p class="mb-0">{{athlete.player_profile.playing_style.title}}</p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Overall Rating</h2>
+                                        <p class="mb-0">{{athlete.player_profile.overall_rating}}</p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Verification</h2>
+                                        <p class="mb-0">
+                                            {% if athlete.is_identity_verified %}
+                                            <span class="table-status badge bg-light text-success">Verified</span>
+                                            {% else %}
+                                            <span class="table-status badge bg-light text-warning">Unverified</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-6">
+                                <div class="common-statistics">
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">School</h2>
+                                        <p class="mb-0">{{athlete.school_name}}</p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Grade</h2>
+                                        <p class="mb-0">{% if athlete.player_profile.grade %} {{athlete.player_profile.grade.name}} {% else %} N/A {% endif %}</p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Badges Earned</h2>
+                                        <p class="mb-0">{{athlete.badge.all.count}}</p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Jersey Number</h2>
+                                        <p class="mb-0">
+                                            {% if athlete.player_profile.jersey_number %} {{athlete.player_profile.jersey_number}} {% else %} Not assign{% endif %} </p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Weight</h2>
+                                        <p class="mb-0"> {% if athlete.player_profile.weight %} {{athlete.player_profile.weight}} lb(pounds) {% else %} N/A {% endif %}</p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Height</h2>
+                                        <p class="mb-0"> {% if athlete.player_profile.height %} {{athlete.player_profile.height}} ft {% else %} N/A  {% endif %}</p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Number of Squads</h2>
+                                        <p class="mb-0">{{number_of_squads}}</p>
+                                    </div>
+
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Photo</h2>
+                                            {% if athlete.is_identity_verified %}
+                                            <button class="btn text-white  " data-bs-toggle="modal" data-bs-target="#photo_img{{i.id}}" title="Click to view full image">
+                                             <img src="{{verification_obj.photo.url}}" class="table_img" />
+                                           </button>
+
+                                            {% comment %} document modal {% endcomment %}
+                                            <div class="modal fade" id="photo_img{{i.id}}" tabindex="-1" aria-labelledby="photo_img" aria-hidden="true">
+                                                <form method="post" enctype="multipart/form-data">
+                                                    <div class="modal-dialog modal-lg">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                        <h5 class="modal-title" id="add_gradew">Identity Image</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+
+                                                        <div class="modal-body">
+                                                            <img src="{{verification_obj.photo.url}}"/>
+                                                        </div>
+
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#grade"
+                                                            style="background:#757575 !important">Close</button>
+                                                        </div>
+                                                    </div>
+                                                    </div>
+                                                </form>
+                                                </div>
+                                                {% comment %} <span class="table_img">
+                                                <img src="{{verification_obj.photo.url}}" class="rounded-circle"> 
+                                                </span> {% endcomment %}
+                                            {% endif %}
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+           </div>
+        </div>
+
+        <h5 class="fw-border my-3 ms-2"> Posts</h5>
+        <div class="wrapper-card border border-1">
+            <div class="row">  
+                {% for post in posts %}
+              {% comment %}  {% endcomment %}
+              <div class="col-12 col-sm-6 col-lg-4">
+                <div class="post_card p-0 bg-white">
+                    <div class="post_header top-heading d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            <div>
+                                {% if post.user.profile_pic %}
+                                <img src="{{post.user.profile_pic.url}}" class="img-fluid rounded-circle border shadow-sm" style="width: 60px; height: 60px; object-fit: cover;">
+                                {% else %}
+                                <img src="{% static 'images/user.png' %}" class="img-fluid rounded-circle border shadow-sm" style="width: 60px; height: 60px; object-fit: cover;">
+                                {% endif %}
+                            </div>
+                            <div class="post_user_title">
+                                <h5 class="fw-bold mt-3 mb-0 medium">{{post.user.get_full_name|title}}</h5>
+                                <p class="text-muted small">{{post.created_at|date:"m-d-Y"}}</p>
+                            </div>
+                        </div>
+                        <h3>
+                            <img src="{% static 'images/table/eye.png' %}" data-bs-toggle="modal" data-bs-target="#post{{post.id}}">
+                        </h3>
+                    </div>
+                    <div class="post_img">
+                        {% comment %} <img src="{{post.file.url}}" alt="Post Image" /> {% endcomment %}
+                        {% if post.file.url|is_video %}
+                                <video controls>
+                                    <source src="{{ post.file.url }}" type="{{ post.file.url|video_mime_type }}" alt="Post Video">
+                                    Your browser does not support the video tag.
+                                </video>
+                        {% else %}
+                            <img src="{{ post.file.url }}" alt="Post Image"/>
+                        {% endif %}
+                        {% comment %}  {% endcomment %}
+                    </div>
+                    <div class="post_info"> 
+                        <div class="post_tags">
+                            <div class="d-flex justify-content-between">
+                                <div class="d-flex align-items-center gap-3">
+                                    {% comment %} <i class="far fa-heart"></i>
+                                    <i class="far fa-comment"></i>
+                                    <i class="far fa-paper-plane"></i> {% endcomment %}
+                                    <h6 class="fw-bold">{% if post.comments.all|length > 0 %}  {{post.comments.all|length}} Comments {% else %} Not comment yet. {% endif %}</h6>
+                                </div>
+
+                               {% if post.tags.all %}
+                                <div class="d-flex align-items-center gap-2">
+                                    <ul class="list-unstyled users-list m-0 avatar-group d-flex align-items-center">
+                                        {% for tag in post.tags.all|slice:":3" %}    
+
+                                        <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up"
+                                         title="{{tag.username}}" data-bs-original-title="{{tag.username}}">
+                                            {% if tag.profile_pic %}
+                                            <img src="{{tag.profile_pic.url}}" style="width: 28px; height: 28px;" alt="E" class="rounded-circle">
+                                            {% else %}
+                                            <img src="{% static 'images/user.png' %}" style="width: 28px; height: 28px;" alt="E" class="rounded-circle">
+                                            {% endif %}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% if post.tags.all|length > 3 %}
+                                     <span>Others + {{post.tags.all|length|add:"-3"}}</span>
+                                    {% endif %}
+                                </div>
+                               {% endif%}
+                            </div>
+                            {% comment %} <h6 class="fw-bold">{% if post.comments.all|length > 0 %}  {{post.comments.all|length}} Comments {% else %} Not comment yet. {% endif %}</h6> {% endcomment %}
+                        </div>
+                        <div class="post_badges">
+                            {% if post.badges_objects %}
+
+                            <div class="d-flex justify-content-between mb-2">
+                              {% for badge in post.badges_objects%}
+                                <div>
+                                    <p class="mb-0 fw-bold">{{badge.badge.name}}</p>
+                                </div>
+                               {% endfor %}
+                            </div>
+                           {% endif %}
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+              {% comment %}  {% endcomment %}
+              {% comment %} post modal {% endcomment %}
+              <div class="modal common-modal modal-sm fade" id="post{{post.id}}" tabindex="-1" aria-labelledby="assignJerseyModal" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 class="modal-title text-center w-100">Post</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          </div>
+                        <div class="modal-body pb-3">
+                            <div class="team-statistics w-100 mt-3">
+                                <div class="row g-3"> 
+                                    <div class="col-12">
+                                        <div class="top-heading d-flex justify-content-between mb-2">
+                                            <div class="d-flex">
+                                                <div>
+                                                    {% if post.user.profile_pic %}
+                                                    <img src="{{post.user.profile_pic.url}}" class="img-fluid rounded-circle border shadow-sm" height="60" width="60">
+                                                    {% else %}
+                                                    <img src="{% static 'images/user.png' %}" class="img-fluid rounded-circle border shadow-sm" height="60" width="60">
+                                                    {% endif %}
+                                                </div>
+                                                <div class="mt-1 ms-2">
+                                                    <h5 class="fw-bold mb-0">{{post.user.get_full_name|title}}</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-sm-12">
+                                        {% comment %} <img src="{{post.file.url}}" alt="Post Image" style="width:28rem"/> {% endcomment %}
+                                       {% if post.file.url|is_video %}
+                                        <video controls style="width: 28rem;" class="post_video">
+                                            <source src="{{ post.file.url }}" type="{{ post.file.url|video_mime_type }}" alt="Post Video">
+                                            Your browser does not support the video tag.
+                                        </video>
+                                        {% else %}
+                                            <img src="{{ post.file.url }}" alt="Post Image" style="width:28rem;" />
+                                        {% endif %}
+
+                                    </div>
+                                    <div class="col-12 mt-3">
+                                        <div class="d-flex justify-content-between">
+                                            <div class="d-flex align-items-center">
+                                                <i class="far fa-heart me-3"></i>
+                                                <i class="far fa-comment me-3"></i>
+                                                <i class="far fa-paper-plane"></i>
+                                            </div>
+            
+                                           {% if post.tags.all %}
+                                            <div class="d-flex">
+                                                <ul class="list-unstyled users-list m-0 avatar-group d-flex align-items-center">
+                                                    {% for tag in post.tags.all|slice:":3" %}
+            
+                                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" 
+                                                    class="avatar avatar-xs pull-up mb-1" title="{{tag.username}}" data-bs-original-title="{{tag.username}}">
+                                                        <a href="#">
+                                                        {% if tag.profile_pic %}
+                                                        <img src="{{tag.profile_pic.url}}" style="width: 28px; height: 28px;" alt="E" class="rounded-circle">
+                                                        {% else %}
+                                                        <img src="{% static 'images/user.png' %}" style="width: 28px; height: 28px;" alt="E" class="rounded-circle">
+                                                        {% endif %}
+                                                       </a>
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                                {% if post.tags.all|length > 3 %}
+                                                 Others + {{post.tags.all|length|add:"-3"}}
+                                                {% endif %}
+                                            </div>
+                                           {% endif%}
+                                        </div>
+                                        <h6 class="fw-bold">{% if post.comments.all|length > 0 %}  {{post.comments.all|length}} Comments {% else %}
+                                             Not comment yet. {% endif %}</h6>
+                                    </div>
+                                    <div class="col-12">
+                                        {% if post.badges_objects %}
+            
+                                        <div class="d-flex justify-content-between">
+                                          {% for badge in post.badges_objects%}
+                                            <div>
+                                                <p class="mb-1 fw-bold">{{badge.badge.name}}</p>
+                                            </div>
+                                           {% endfor %}
+                                        </div>
+                                       {% endif %}
+            
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <!-- Modal footer -->
+
+                        <div class="modal-footer d-flex justify-content-center border-0 pb-4">
+                            <a href="{%url 'athlete_management' %}?action=deactivate&id={{athlete.id}}"  class="btn btn-dark bg-black" >Deactivate User Account</a>
+                            <a href="?action=delete_post&id={{post.id}}" class="btn btn-white border border-1 border-light">
+                                <i class="fa-solid fa-trash-can text-danger"></i>
+                            </a>
+                        </div>
+                        
+                    </div>
+                  </div>
+            </div>
+              {% comment %}  {% endcomment %}
+              {% empty %}
+              <h2 class="h5 text-center mb-0">Not posted yet.</h2>
+              {% endfor  %}
+            </div>
+        </div>
+
+          {% comment %} flowers {% endcomment %}
+          <div class="wrapper-card border border-1 p-0">
+            <div class="row gy-3">                            
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-box mb-0">
+                        <h2>Followers({{followers|length}})</h2>                                
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="display border-0">
+                            <thead>
+                                <tr>
+                                    <th>First Name </th>
+                                    <th>Last Name</th>
+                                    <th>User Name</th>
+                                    <th>User Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in followers %}
+                                <tr>
+                                    <td>{{user.follower.first_name|title}}</td>
+                                    <td>{{user.follower.last_name|title}}</td>
+                                    <td>{{user.follower.username}}</td>
+                                    <td>{{user.follower.user_role}}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No followers users yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% comment %} pagination {% endcomment %}
+                    {% include "pagination.html" with page_obj=followers %} 
+                    {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+        {% comment %} end flowers {% endcomment %}
+
+         {% comment %} following {% endcomment %}
+        <div class="wrapper-card border border-1 p-0 pb-3">
+            <div class="row gy-3">                            
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-box mb-0">
+                        <h2>Followings ({{following|length}})</h2>                                
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="display border-0">
+                            <thead>
+                                <tr>
+                                    <th>First Name </th>
+                                    <th>Last Name</th>
+                                    <th>User Name</th>
+                                    <th>User Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in following %}
+                                <tr>
+                                    <td>{{user.following.first_name|title}}</td>
+                                    <td>{{user.following.last_name|title}}</td>
+                                    <td>{{user.following.username}}</td>
+                                    <td>{{user.following.user_role}}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No following users yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% comment %} pagination {% endcomment %}
+                    {% include "pagination.html" with page_obj=following %} 
+                    {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+        {% comment %} end following {% endcomment %}
+
+        {% comment %} Squad {% endcomment %}
+        <div class="wrapper-card p-0 pb-3" style="border: 1px solid #E8EBEB;">
+            <div class="sub_heading_card sub-heading flex-box">
+                <h2>Squad Details</h2>                                
+            </div>
+            {% if squad %}
+            <div class="row align-items-center p-4 g-3">
+              <div class="col-lg-2">
+                <div class="player-img-blk">
+                    {% if squad.logo %}
+                       <img src="{{squad.logo.url}}" alt="supporter">
+                    {% else %}
+                        <img src="{% static 'images/squad.png' %}" alt="supporter">
+                    {% endif %}
+                </div>
+              </div>
+              <div class="col-lg-10">
+                <div class="playerinfo">
+                  <div class="row ">
+                    <div class="col-md-12 col-lg-6">                              
+                      <div class="supporter-statistics squad_info bg-white">
+                        <div class="common-info-detail justify-content-start">
+                          <h2 class="h4">Squad name</h2>
+                          <p class="mb-0">{{squad.name}}</p>
+                        </div>
+                        <div class="common-info-detail justify-content-start">
+                          <h2 class="h4">Total Wins</h2>
+                          <p class="mb-0">{{squad.win}}/ {{ squad.win|add:squad.loss }}</p>
+                        </div>
+                        <div class="common-info-detail justify-content-start">
+                          <h2 class="h4">Total Loses</h2>
+                          <p class="mb-0">{{squad.loss}} / {{ squad.win|add:squad.loss }}</p>
+                        </div>
+                        <div class="common-info-detail justify-content-start">
+                          <h2 class="h4">Members</h2>
+                          <p class="mb-0">
+                            {% for member in squad.players.all %}
+                            {% if not forloop.first %}, {% endif %}{{ member.get_full_name }}
+                            {% endfor %}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% else %}
+            <h2 class="h5 text-center mb-3">Squad Not created yet </h2>
+            {% endif %}
+        </div>
+        {% comment %} squad {% endcomment %}
+
+
+        {% comment %} show assign badges {% endcomment %}
+           <div class="wrapper-card border border-1 p-0 pb-3">
+            <div class="row gy-3">
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-box mb-0">
+                        <h2>Badges Earned ({{earned_badges|length}})</h2>
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="display border-0">
+                            <thead>
+                                <tr>
+                                    <th>SN</th>
+                                    <th>Name </th>
+                                    <th>Level</th>
+                                    <th>Point</th>
+                                    <th>Assigned By</th>
+                                    <th>Templates</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for earned_badge in earned_badges %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td>{{earned_badge.badge.name|title}}</td>
+                                    <td>
+                                        {% if earned_badge.badge_level %}
+                                        <img src="{{earned_badge.badge_level.icon.url}}"
+                                         style="width: 80px; height: 80px; margin-right: 5px; border-radius: 50%; object-fit: cover; object-position: center;"
+                                          alt="Badge Level Icon">
+                                        {{earned_badge.badge_level.name|title}}
+
+                                        {% elif earned_badge.badge.icon%}
+                                         <img src="{{earned_badge.badge.icon.url}}"
+                                         style="width: 80px; height: 80px; margin-right: 5px; border-radius: 50%; object-fit: cover; object-position: center;"
+                                          alt="Badge Icon">
+
+                                        {% else %}
+                                        <span class="text-muted">No level available</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{earned_badge.point}}</td>
+                                    <td>{{earned_badge.assigned_by.get_full_name|title}} ({{earned_badge.assigned_by.user_role}})</td>
+                                    <td>
+                                        {% if earned_badge.templates %}
+                                        <ul class="mb-0">
+                                            {% for template in earned_badge.templates %}
+                                                <li>{{ template }}</li>
+                                            {% empty %}
+                                                <li class="text-muted">No templates available</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <span class="text-muted">No templates available</span>
+                                    {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No badges earned yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div> 
+            </div>
+        </div>
+
+        {% comment %} end show assing badges {% endcomment %}
+    </div>
+
+
+{% comment %} modals {% endcomment %}
+
+{% comment %} assign badge {% endcomment %}
+
+{% comment %} {% include 'athletes/assign_badge.html' with badges=badges earned_badges=earned_badges %} {% endcomment %}
+<div class="modal common-modal fade" id="assignBadgeModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-body">
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="badge_level" id="badge_level" required>
+                <div class="common-box-body">
+                    <h2>Assign Badge</h2>
+                    {% if assign_badge_pop %}
+                    <div class="alert alert-danger alert-dismissible fade show mt-2" role="alert" bis_skin_checked="1">
+                            Please select badge to assign.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endif %}
+                    <div class="common-modal-form">
+                      {% for badge in badges %}
+                        <div class="row">
+                            <div class="col-lg-12 my-2">
+
+                            {% if badge|check_badge_level %}
+                                 <div>
+                                    {% comment %} <input class="form-check-input" type="checkbox" name="badge" value="{{badge.id}}"
+                                     {% if earned_badges|check_is_badge_assigned:badge %} checked {% endif %}>  {% endcomment %}
+                                    <h5 class="fw-bold">{{badge.name}}</h5>
+                                </div>
+                                <div>
+                                    {% for badge_level in  badge.badge_level.all %}
+                                            <ol>
+                                                {% for i in badge_level.badge_template.all %}
+                                                {% with temp=badge.id|add:i.title %}
+                                                {% if temp|check_template:assigned_badge_template %}
+                                                <li> <input class="form-check-input" type="checkbox" id="flexCheckDefault"
+                                                    name="template" value="{{badge.id}}_{{i.title}}" checked> {{i.title}}</li>
+                                                {% else %}
+                                                <li> <input class="form-check-input" type="checkbox" id="flexCheckDefault"
+                                                    name="template" value="{{badge.id}}_{{i.title}}"> {{i.title}}</li>
+                                                {% endif %}
+                                                {% endwith %}
+                                                {% endfor %}
+                                            </ol>
+                                    {% endfor %}
+                                </div>
+
+                                {% else %}
+                                   <div class="d-flex">
+                                     <input class="form-check-input" type="checkbox" name="non_template_badge" value="{{badge.id}}"
+                                     {% if earned_badges|check_is_badge_assigned:badge %} checked {% endif %}>  
+                                    <h5 class="fw-bold ms-1">{{badge.name}}</h5>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="common-modal-btns">
+                         <button id="backBtn" type="button" class="btn btn-secondary" style="display: none;"  onclick='GoBack()'>
+                            Back
+                        </button>
+                        <button class="btn btn-dark" name="AssignBadge">Save</button>
+                    </div>
+                    {% comment %} <center><span class="text-danger">Please note: only checked badges will be assigned. If you uncheck a selected badge, it will be removed. </span></center> {% endcomment %}
+                </div>
+              </form>
+          </div>
+        </div>
+    </div>
+</div>
+  
+{% comment %} end assign badge {% endcomment %}
+
+{% comment %} assign new Jersey Number {% endcomment %}
+<div class="modal common-modal fade" id="assignJerseyModal" tabindex="-1" aria-labelledby="assignJerseyModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+         <form action="" method="post">
+            {% csrf_token %}
+            <div class="modal-body">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="common-box-body">
+                    <h2>Assign Jersey Number</h2>
+                    <div class="common-modal-form">
+                        <div class="row gy-4">
+                            <div class="col-lg-12">
+                                <div class="common-modal-field">
+                                    <label>Jersey Number</label>
+                                    <input type="number" name="jersey_number" class="form-control"
+                                     placeholder="Enter Jersey Number" value="{{jersey_form.jersey_number.value}}" requied>
+
+                                    <div class="form-error text-danger">{{ jersey_form.jersey_number.errors|striptags }}
+                                        {% if jersey_player %}
+                                        <a href="{% url 'athlete_profile' pk=jersey_player.user.id %}" title="click to view profile">({{jersey_player.user.username}})</a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div> 
+                        </div>
+                    </div>
+                    <div class="common-modal-btns">
+                        <button class="btn btn-dark" name="jerseyNumber">Submit</button>
+                    </div>
+                </div>
+            </div>
+         </form>
+        </div>
+      </div>
+</div>
+
+{% comment %} end modals {% endcomment %}
+</section>
+
+
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+    $(document).ready(function() {
+        {% if jersey_form.jersey_number.errors %}
+         $('#assignJerseyModal').modal('show');
+        {% elif assign_badge_pop %}
+          $('#assignBadgeModal').modal('show');
+        {% endif %}
+    });
+  
+
+    const badge_level= {{assigned_badge_list|safe }}
+    {% comment %} console.log(badge_level); {% endcomment %}
+    function badgeLevel(level){
+
+        const index = badge_level.indexOf(level);
+        if (index === -1) {
+            badge_level.push(level);
+        } else {
+            {% comment %} badge_level.splice(index, 1); {% endcomment %}
+             const confirmed = confirm("Do you want to remove this badge level?");
+            if (confirmed) {
+                badge_level.splice(index, 1);
+            } else {
+                return; // Do nothing if user cancels
+            }
+        }
+        {% comment %} console.log(badge_level); {% endcomment %}
+        document.getElementById("badge_level").value = badge_level.join(", ");
+    }
+
+     $(document).ready(function() {  
+        document.getElementById("badge_level").value = badge_level.join(", ");
+       });
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const params = new URLSearchParams(window.location.search);
+     const backBtn = document.getElementById("backBtn");
+     const backBtn1 = document.getElementById("backBtn1");
+
+    if (params.get("assign_badge") === "true") {
+      let modal = new bootstrap.Modal(document.getElementById("assignBadgeModal"));
+      modal.show();
+      backBtn.style.display = "inline-block";
+      backBtn1.style.display = "inline-block";
+    }
+
+  });
+
+   function GoBack(){
+    window.history.back();
+   }
+</script>
+
+{% endblock %}

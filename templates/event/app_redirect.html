@@ -1,0 +1,39 @@
+ <html>
+      <head><title>Redirecting...</title></head>
+      <body>
+        <p>Redirecting to the app...</p>
+
+        <p>If you are not redirected, <a href="/com.athleterated.athlete_rated://event_payment_success">tap here</a>.</p>
+
+         <script>
+          const token = "{{ token }}";
+          const deepLink = `com.athleterated.athlete_rated://event_payment_success`;
+          const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+          const isAndroid = /Android/i.test(navigator.userAgent);
+          const iOSAppStoreLink = "https://apps.apple.com/";
+          const androidPlayStoreLink = "https://play.google.com/";
+
+          function openApp() {
+            let isPageHidden = false;
+
+            document.addEventListener("visibilitychange", function () {
+              if (document.hidden) isPageHidden = true;
+            });
+
+            if (isIOS || isAndroid) {
+              window.location.href = deepLink;
+            }
+
+            setTimeout(() => {
+              if (!isPageHidden) {
+                window.location.href = isIOS ? iOSAppStoreLink : isAndroid ? androidPlayStoreLink : "#";
+              }
+            }, 1500);
+          }
+
+          window.onload = openApp;
+        </script>
+
+
+      </body>
+ </html>

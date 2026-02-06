@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% load static %}
+{% load event_filters %}
+{% block title%} Events Management {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Event Transaction Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% block css %}
+<style>
+    img.rounded-circle {
+        width: 80px;
+        height: 80px; 
+        object-fit: cover; 
+    }
+</style>
+{% endblock css %}
+
+{% block content %} 
+
+
+<section class="main-section spacer">
+    <div class="container">
+        {% comment %} <div class="row">
+            <div class="col">
+                <a href="{% url 'create_event' %}" class="btn fw-bold my-3 bg-black text-white float-end"> Create Event</a>
+            </div>
+        </div> {% endcomment %}
+        <div class="wrapper-card p-0">
+            <div class="row gy-3">                            
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-wrap gap-3 flex-box mb-3">
+                        <h2>Transaction List</h2>    
+                        <div class="d-flex flex-wrap gap-3">
+                           <div class="d-flex">
+                                <input type="text" id="searchInput" class="form-control" placeholder="Search..." > 
+                                <div class="sort-by ms-1">
+                                    <select class="form-select" id="sortBy">
+                                        <option value="" disabled selected>Sort by</option>
+                                        <option value="0">Event Name</option>
+                                        <option value="1">Hyperlink</option>
+                                        <option value="2">Date</option>
+                                        <option value="3">Status</option>
+                                    </select>
+                                </div>
+                           </div>
+                           <div class="hstack flex-wrap gap-2">
+                             <a href="{% url 'event_plan' %}" class="btn fw-bold bg-black text-white"> Plans</a>
+                             <a href="{% url 'create_event' %}" class="btn fw-bold bg-black text-white"> Create Event</a>
+                           </div>
+                          </div>
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="table border-0">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Event Name </th>
+                                    <th>Amount</th>
+                                    <th>Plan</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in transactions %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                     {% if transaction.event  %}
+                                    <td>
+                                        <a href="{% url "event_detail" pk=transaction.event.id %}" class="table-eye text-primary text-decoration-underline" 
+                                        title="Click to show event details">
+                                            {{transaction.event.name|title}} 
+                                        </a>
+                                    </td>
+                                    <td> {{transaction.amount}}</td>
+                                    <td>
+                                        {{transaction.event_plan.get_name_display}}
+                                    </td>
+                                    <td>{{transaction.created_at|date:"m-d-Y h:i A"}}</td> 
+
+                                    {% else  %}
+                                    <td>
+                                        <span class="text-muted text-danger" title="This event no longer exists">
+                                            Event not available
+                                        </span>
+                                    </td>
+                                    <td> {{transaction.amount}}</td>
+                                    <td>{{transaction.event_plan.get_name_display }}</td>
+                                    <td>{{transaction.created_at|date:"m-d-Y h:i A"}}</td> 
+                                    {% endif  %}
+                                    <td>
+                                        {% if transaction.status == "succeeded" %}
+                                        <span class="table-status badge bg-light text-success">{{transaction.status|title}}</span>
+                                        {% elif transaction.status == "failed" %}
+                                        <span class="table-status badge bg-light text-danger">{{transaction.status|title}}</span>
+                                        {% elif transaction.status == "failed"%}
+                                        <span class="table-status badge bg-light text-danger">{{transaction.status|title}}</span>
+                                        {%  else %}
+                                          <span class="table-status badge bg-light text-warning">{{transaction.status|title}}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if transaction.payer_info %}
+                                        <span class="table-action">
+                                               <button class="btn border border-1 ms-1 bg-dark text-white" data-bs-toggle="modal" data-bs-target="#HyperModal{{transaction.id}}"
+                                              title="View payer info">
+                                              <i class="fa-solid fa-building-columns"></i>
+                                        </button>
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+
+                                {% comment %} hyperlink model {% endcomment %}
+                                {% if transaction.payer_info %}
+                                <div class="modal fade" id="HyperModal{{transaction.id}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                      <div class="modal-content">
+                                        <div class="modal-header">
+                                          <h5 class="modal-title" id="HyperModalLabel">Payer info</h5>
+                                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+
+                                        <div class="modal-body">
+                                           <p><strong>Fist Name:</strong> {{ transaction.payer_info.name.given_name }}</p>
+                                            <p><strong>Last Name:</strong> {{ transaction.payer_info.name.surname }}</p>
+                                            <p><strong>Email:</strong> {{ transaction.payer_info.email_address }}</p>
+                                            <p><strong>Amount:</strong> {{ transaction.amount }}</p>
+                                            <p><strong>Payer ID:</strong> {{ transaction.payer_info.payer_id }}</p>
+                                            <p><strong>Country:</strong> {{ transaction.payer_info.address.country_code }}</p>
+                                        </div>
+
+                                        <div class="modal-footer">
+                                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% comment %} end model {% endcomment %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% comment %} pagination {% endcomment %}
+                    {% include "pagination.html" with page_obj=events %}
+                    {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+{% endblock content %}
+
+{% block js %}
+<script>
+    $(document).ready(function () {
+        let table = $('#athletesTable').DataTable({
+            "paging": false,
+            "lengthChange": false,
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "dom": "lrtip",
+            "order": []  
+        });
+
+        
+        $('#searchInput').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+    
+        
+        $('#sortBy').on('change', function () {
+            let columnIndex = $(this).val();
+            if (columnIndex !== "") {
+                table.order([parseInt(columnIndex), 'asc']).draw();
+            }
+        });
+
+         
+    });
+</script>
+
+{% endblock %}
+

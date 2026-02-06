@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Organization Management {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Organization Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+
+{% block content %} 
+
+<section class="main-section spacer">
+    <div class="container">
+        <div class="wrapper-card p-0">
+            <div class="row gy-3">                            
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-wrap gap-3 flex-box mb-3">
+                        <h2>Organization Management List</h2>
+                        <div class="d-flex flex-wrap gap-3">
+                             <div class="hstack flex-wrap gap-2">
+                                <input type="text" id="searchInput" class="form-control" placeholder="Search..." > 
+                             </div>
+                             <div>
+                                <a class="btn fw-bold ms-2 bg-black text-white" href="{% url 'roster_grade' %}">Grades</a>
+                             </div>
+                        </div>
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="table border-0">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Name </th>
+                                    <th>Created By</th>
+                                    <th>Created on</th>
+                                    <th>Sport</th>
+                                    <th>Roster</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for org in organizations %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <img src="{{org.logo.url}}" width="40px" class="rounded border-1">
+                                        {{org.name|title}}
+                                    </td>
+                                    <td>{{org.created_by.username|title}} ({{org.created_by.email}})</td>
+                                    <td>{{org.created_at|date:"m-d-Y"}}</td>
+                                    <td>{{org.sport.name|title}}</td>
+                                    <td>
+                                        {{org.roster.all.count}}
+                                    </td>
+                                    <td>
+                                        <span class="table-action">
+                                            <a href="{% url "organization_detail" pk=org.id%}" class="table-eye">
+                                                <img src="{% static "images/table/eye.png" %}">                                                                   
+                                            </a>                                                            
+                                            
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                                                      
+                            </tbody>
+                        </table>
+                    </div>
+                    {% comment %} pagination {% endcomment %}
+                    {% include "pagination.html" with page_obj=organizations %}
+                    {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+{% endblock content %}
+
+

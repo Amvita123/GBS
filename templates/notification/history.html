@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% load static %}
+{% load event_filters %}
+{% block title%} Notification Management {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Notification Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+
+
+{% block content %} 
+
+
+<section class="main-section spacer">
+    <div class="container">
+        <div class="wrapper-card p-0">
+            <div class="row gy-3">                            
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-wrap gap-3 flex-box mb-3">
+                        <h2>Notification {{action|title}} List</h2>
+                        <div class="d-flex flex-wrap gap-3">
+                             <div class="hstack flex-wrap gap-2">
+                                <a href="{% url 'send_push_notification' %}" class="btn fw-bold bg-black text-white">Send Notification</a>
+                             </div>
+                        </div>
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="table border-0">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Title </th>
+                                    <th>Message</th>
+                                    <th>To</th>
+                                    <th>Schedule</th> 
+                                    <th>Event</th>
+                                    <th>Created By</th>
+                                    {% if action == "upcoming"%}
+                                    <th>Actions</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for notification in notifications %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{notification.title|title}}</td>
+                                    <td>
+                                        {{notification.message|truncatechars:100}}
+                                    </td>
+                                    <td>
+                                       {{ notification.to|title }}
+                                    </td>
+                                    <td>{{notification.schedule|date:"m-d-Y h:i A"}}</td> 
+                                    <td>
+                                        {% if notification.event %}
+                                        <a href="{% url "event_detail" pk=notification.event.id %}" class="table-eye text-primary text-decoration-underline" 
+                                        title="Click to show event details">
+                                            {{notification.event.name|title}} 
+                                        </a>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{notification.created_by.username|title}}</td>
+                                    {% if action == "upcoming"%}
+                                      <td>
+                                        <span class="table-action">
+                                            <a  class="table-eye" data-bs-toggle="modal" data-bs-target="#EditModal{{notification.id}}" title="Edit Notification">
+                                                <img src="{% static "images/edit.png" %}" >
+                                            </a>
+                                            <button class="table-trash" data-bs-toggle="modal" data-bs-target="#deleteModal{{notification.id}}">
+                                              <img src="{% static "images/table/trash.png" %}">
+                                            </button>
+                                        </span>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% comment %} delete modal {% endcomment %}
+                                <div class="modal fade" id="deleteModal{{notification.id}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                      <div class="modal-content">
+                                        <div class="modal-header">
+                                          <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete <strong>{{notification.title}} </strong>?
+                                        </div>
+                                        <div class="modal-footer">
+                                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                          <a href="?action=delete&id={{notification.id}}&page={{page_number}}" class="btn btn-danger" >Delete</a>
+                                        </div>
+                                      </div>
+                                    </div>
+                                </div>
+                                {% comment %} edit model {% endcomment %}
+                                <div class="modal fade" id="EditModal{{notification.id}}" tabindex="-1" aria-labelledby="EditModalLabel" aria-hidden="true">
+                                  <form method="post" enctype="multipart/form-data" action="{% url 'update_notification' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="notification_id" value="{{notification.id}}">
+                                        <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                            <h5 class="modal-title" id="HyperModalLabel">Update  Notification</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+                                                <div class="col-12 my-3">
+                                                    <label for="title" class="form-label">Title</label>
+                                                    <input type="text" class="form-control" name="title" id="title"  value="{{notification.title}}" required>
+                                                    <div class="text-danger">{{ form.title.errors }}</div>
+                                                </div>
+
+
+                                                <div class="col-12 my-3">
+                                                    <label for="message" class="form-label">Message</label>
+                                                    <textarea class="form-control" id="message" name="message" rows="4" 
+                                                    required placeholder="Write here...">{{notification.message}}</textarea>
+                                                    <div class="text-danger">{{ form.message.errors }}</div>
+                                                </div>
+
+                                                {% if notification.to == "event" %}
+                                                <div class="col-12">
+                                                    <label for="event" class="form-label">Choose Event Type</label>
+                                                    <select class="form-select" id="event" name="event" requied>
+                                                        <option value="" disabled selected>Select</option>
+                                                        {% for event in events %}
+                                                        <option value="{{ event.id }}" {% if event.id == notification.event.id %}selected{% endif %}>
+                                                            {{ event.name|title }}
+                                                        </option>
+                                                    {% endfor %}
+                                                    </select>
+                                                    <div class="text-danger">{{ form.name.errors }}</div>
+                                                </div>
+                                                <input type="hidden" name="to" value="event" required>
+                                                {% else %}
+                                                <div class="col-12">
+                                                    <label for="to" class="form-label">Choose Event Type</label>
+                                                    <select class="form-select" id="to" name="to" requied>
+                                                        <option value="" disabled selected>Select</option>
+                                                        {% for value in notifications_to %}
+                                                        <option value="{{ value }}" {% if notification.to == value|stringformat:"s" %}selected{% endif %}>
+                                                            {{ value|title }}
+                                                        </option>
+                                                    {% endfor %}
+                                                    </select>
+                                                    <div class="text-danger">{{ form.name.errors }}</div>
+                                                </div>
+                                                {% endif %}
+
+                                                <div class="col-12 my-3">
+                                                    <label for="schedule_time" class="form-label">Schedule Time (Optional)</label>
+                                                    <input type="datetime-local" class="form-control" name="schedule" 
+                                                    value="{{notification.schedule|date:'Y-m-d\\TH:i'}}" id="schedule_time">
+                                                    <div class="text-danger">{{ form.schedule.errors }}</div>
+                                                </div>
+
+                                            </div>
+
+                                            <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background:#757575 !important">Cancel</button>
+                                            <button type="submit" class="btn bg-black text-white">Submit</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                {% comment %} end model {% endcomment %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% comment %} pagination {% endcomment %}
+                    {% include "pagination.html" with page_obj=notifications %}
+                    {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+{% endblock content %}
+
+{% block js %}
+<script>
+    $(document).ready(function () {
+        let table = $('#athletesTable').DataTable({
+            "paging": false,
+            "lengthChange": false,
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "dom": "lrtip",
+            "order": []  
+        });
+
+        
+        $('#searchInput').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+    
+        
+        $('#sortBy').on('change', function () {
+            let columnIndex = $(this).val();
+            if (columnIndex !== "") {
+                table.order([parseInt(columnIndex), 'asc']).draw();
+            }
+        });
+
+         
+    });
+</script>
+
+{% endblock %}
+

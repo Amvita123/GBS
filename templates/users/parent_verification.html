@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Consent - Athlete Rated</title>
+    <link href="{% static 'css/email.css' %}" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            background: #fff;
+            margin: 40px auto;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #007bff;
+            text-align: center;
+        }
+        p {
+            color: #333;
+            line-height: 1.6;
+        }
+        .details-box {
+            background: #f1f5f9;
+            border-left: 4px solid #007bff;
+            padding: 10px 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 10px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            color: #fff;
+            transition: 0.3s;
+        }
+        .btn-yes {
+            background-color: #28a745;
+        }
+        .btn-no {
+            background-color: #dc3545;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Parent Consent Required</h2>
+
+        <p>Hello <strong>{{ verification_obj.parent_legal_name|title }}</strong>,</p>
+
+        <p>
+            Your child, <strong>{{ verification_obj.legal_full_name|title }}</strong>, has submitted identity verification documents
+            to <strong>Athlete Rated</strong>. To proceed, we require your consent as their parent or guardian.
+        </p>
+
+        <div class="details-box">
+            <p><strong>Child’s Name:</strong> {{ verification_obj.legal_full_name|title }}</p>
+            <p><strong>Date of Birth:</strong> {{ verification_obj.dob }}</p>
+            <p><strong>Document Type:</strong> {{ verification_obj.document_type.title }}</p>
+        </div>
+
+        <p>Please confirm whether you approve your child’s document verification:</p>
+
+        <div style="text-align: center;">
+            <form method="post">
+            {% csrf_token %}
+            <button name="action" value="accept" class="btn btn-yes">✅ Yes, I Approve</button>
+            <button name="action" value="reject" class="btn btn-no">❌ No, I Don’t Approve</button>
+            </form>
+        </div>
+
+        <p style="margin-top: 20px;">
+            Once you respond, our verification team will process the status accordingly.
+        </p>
+
+        <div class="footer">
+            <p>© {{ year }} Athlete Rated. All rights reserved.</p>
+            <small>If you didn’t expect this email, please contact our support immediately.</small>
+        </div>
+    </div>
+</body>
+</html>

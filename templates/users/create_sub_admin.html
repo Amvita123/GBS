@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} CreateSub Admin {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Sub-Admin Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+
+{% block content %} 
+
+<section class="main-section spacer">
+    <div class="container">
+        <div class="wrapper-card ">
+            <div class="row gy-3">
+                <div class="col-xl-12">
+                      <div class="sub-heading flex-box">
+                        <h2>Create Sub Admin</h2>    
+                        <div class="float-end">
+                            <a href="{% url 'sub_admin_management' %}" class="btn black-btn bg-black text-white">Back</a>
+                        </div>
+                    </div>
+                   <div>
+                      <form method="post" enctype="multipart/form-data"> 
+                       {% csrf_token %}
+                        <div class="row gy-4">
+                                      <div class="col-lg-6">
+                                          <div class="sub-heading mt-0 mb-3">
+                                              <h2 class="h4 mb-0">First Name</h2>
+                                          </div>
+                                          <div class="form-block p-relative">
+                                              <input type="text" class="form-control" name="first_name" placeholder="First Name" value="{{form.first_name.value}}" required>
+                                              <div class="form-error text-danger">{{ form.first_name.errors }}</div>
+                                          </div>
+                                      </div>
+                                       <div class="col-lg-6">
+                                          <div class="sub-heading mt-0 mb-3">
+                                              <h2 class="h4 mb-0">Last Name</h2>
+                                          </div>
+                                          <div class="form-block p-relative">
+                                              <input type="text" class="form-control" name="last_name" placeholder="Last Name" value="{{form.last_name.value}}" required>
+                                              <div class="form-error text-danger">{{ form.last_name.errors }}</div>
+                                          </div>
+                                      </div>
+
+                                      <div class="col-lg-6">
+                                          <div class="sub-heading mt-0 mb-3">
+                                              <h2 class="h4 mb-0">Email Address</h2>
+                                          </div>
+                                          <div class="form-block p-relative">
+                                              <input type="text" name="email" class="form-control" placeholder="Email Unique" value="{{form.email.value}}" required>
+                                               <div class="form-error text-danger">{{ form.email.errors }}</div>
+                                          </div>
+                                      </div>
+
+                                    {% comment %} <div class="col-lg-6">
+                                        <div class="sub-heading mt-0 mb-3">
+                                            <h2 class="h4 mb-0">Username</h2>
+                                        </div>
+                                        <div class="form-block p-relative">
+                                            <input type="text" class="form-control" placeholder="Username Unique" name="username" value="{{form.username.value}}" required>
+                                            <div class="form-error text-danger">{{ form.username.errors }}</div>
+                                        </div>
+                                    </div> {% endcomment %}
+
+                                      <div class="col-lg-6">
+                                        <div class="sub-heading mt-0 mb-3">
+                                            <h2 class="h4 mb-0">Phone Number</h2>
+                                        </div>
+                                        <div class="form-block p-relative">
+                                            <input type="text" class="form-control" placeholder="Mobile number" name="phone_number" value="{{ form.phone_number.value|default:'+1' }}"  required>
+                                            <div class="form-error text-danger">{{ form.phone_number.errors }}</div>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="col-lg-6">
+                                        <div class="sub-heading mt-0 mb-3">
+                                            <h2 class="h4 mb-0">Organization (Optional)</h2>
+                                        </div>
+                                        <div class="form-block p-relative">
+                                             <select class="form-control" name="organization">
+                                                <option value="" disabled selected>Select organization</option>
+                                                {% for i in orgs %}
+                                                    <option value="{{i.id}}" {% if form.organization.value|stringformat:"s" == i.id|stringformat:"s" %}selected{% endif %}>{{i.name|title}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                         <div class="form-error text-danger">{{ form.organization.errors }}</div>
+                                    </div>
+
+
+                                    <div class="col-lg-6">
+                                    <div class="sub-heading mt-0 mb-3">
+                                        <h2 class="h4 mb-0">Admin Type (Permissions will descide according to this)</h2>
+                                    </div>
+
+                                    <div class="form-block p-relative">
+
+                                        <div class="d-flex gap-3">
+
+                                            <label class="d-flex align-items-center gap-1">
+                                                <input type="radio" name="user_role" value="ar_staff"
+                                                    {% if form.user_role.value == 'ar_staff' %}checked{% endif %} required>
+                                                AR Staff
+                                            </label>
+
+                                            <label class="d-flex align-items-center gap-1">
+                                                <input type="radio" name="user_role" value="sub_admin"
+                                                    {% if form.user_role.value == 'sub_admin' %}checked{% endif %} required>
+                                                Event Director (External)
+                                            </label>
+
+                                        </div>
+
+                                        <div class="form-error text-danger">
+                                            {{ form.gender.errors }}
+                                        </div>
+
+                                    </div>
+                                </div>
+
+
+
+
+                                    <div class="col-lg-6">
+                                        <div class="sub-heading mt-0 mb-3">
+                                            <h2 class="h4 mb-0">Permissions or Access</h2>
+                                        </div>
+
+                                        <!-- All -->
+                                         {% for i in permissions %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" name="permissions"  type="checkbox" id="{{i.name}}" value="{{i.id}}" 
+                                            {% if i.id|stringformat:"s" in form.permissions.value|default:list %}checked{% endif %}>
+                                            <label class="form-check-label" for="{{i.name}}">
+                                                {{i.name|title}}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                         <div class="form-error text-danger">{{ form.permissions.errors }}</div>
+
+                                    </div>
+
+
+                                    </div>
+                                  <div class="d-flex gap-3 float-end">
+                                     <button type="reset" class="btn black-btn fw-bold fs-6 mt-4">Reset</button>
+                                     <button type="submit" class="btn black-btn fw-bold fs-6 mt-4">Create</button>
+                                  </div
+
+                                </div>
+                      </form>
+                   </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+{% endblock content %}
+
+{% block js %}
+
+  <script>
+    // Select/Deselect all permissions
+    document.getElementById('full access').addEventListener('change', function () {
+        const checkboxes = document.querySelectorAll('input[name="permissions"]');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+</script>
+
+{% endblock %}
+

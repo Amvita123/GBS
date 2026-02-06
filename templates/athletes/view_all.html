@@ -1,0 +1,462 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Athlete {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Athlete Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+
+{% block content %} 
+
+<section class="main-section spacer">
+    <div class="container">
+        <div class="wrapper-card p-0">
+            <div class="row gy-3">
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-wrap gap-3 flex-box mb-3">
+                        <h2>Athletes List</h2>
+                        <div class="d-flex flex-wrap gap-3">
+                            <form class="d-flex">
+                              <input type="text" id="" class="form-control" placeholder="Search..." title="type to search..." name="q" value="{{request.GET.q}}" > 
+                              <button class="btn border border-1 ms-1" title="click to deep search"><i class="fa fa-search"></i></button>
+                              {% if query %}
+                                 <a href="{% url 'athlete_management' %}" class="btn border border-1 ms-1 bg-dark text-white" title="clear search">
+                                  <i class="fa-solid fa-xmark"></i>    </a>
+                              {% endif %}
+                            </form>
+                            <div class="sort-by ms-1">
+                                <select class="form-select" id="sortBy">
+                                    <option value="" disabled selected>Sort by</option>
+                                    <option value="first_name">First Name</option>
+                                    <option value="last_name">Last Name</option>
+                                    <option value="email_address">Email Address</option>
+                                    <option value="user_name">User Name</option>
+                                    <option value="position">Position</option>
+                                    <option value="badges_earned">Badges Earned</option>
+                                    <option value="status">Status</option>
+                                    <option value="jersey_number">Jersey Number</option>
+                                </select>
+                            </div>
+                            {% if request.user.is_superuser or request.user.user_role == "ar_staff" %}
+                            <div class="hstack flex-wrap gap-2">
+                                <a class="btn btn-black bg-black text-white fw-bold" data-bs-toggle="modal" data-bs-target="#grade">Grade</a>
+                                <a class="btn black-btn bg-black text-white" id="exportBtn">Export Table</a>
+                                <a href="/athlete/export" class="btn black-btn bg-black text-white">Export</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                       {% comment %} add  grade{% endcomment %}
+                    <div class="modal fade" id="add_grade" tabindex="-1" aria-labelledby="add_grade" aria-hidden="true">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="add_gradew">Add Grade for Athletes</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="col-12 my-3">
+                                        <label for="name" class="form-label">Grade Name</label>
+                                        <input type="text" class="form-control" name="name" id="name" placeholder="enter grade name (unique)" required>
+                                        <div class="text-danger">{{ form.name.errors }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#grade" style="background:#757575 !important">Cancel</button>
+                                    <button type="submit" class="btn bg-black text-white" name="add_grade" value="add_grade">Save</button>
+                                </div>
+                            </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    {% comment %} view all class or grade {% endcomment %}
+                     <div class="modal fade" id="grade" tabindex="-1" aria-labelledby="grade" aria-hidden="true">
+                       <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="gradea">All Grade</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+
+                        <div class="modal-body table-blk">
+                            <table class="display border-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>S.No</th>
+                                            <th>Name</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for grade in athlete_grades %}
+                                        <tr>
+                                            <td>{{forloop.counter}}</td>
+                                            <td>{{grade.name|title}}</td>
+                                            <td>
+                                                <span class="table-action">
+                                                    <button class="table-trash" onclick="open_delete_modal('{{grade.id}}', '{{grade.name}}')">
+                                                        <img src="{% static "images/table/trash.png" %}">
+                                                    </button>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                        <td colspan="3" class="text-center text-muted">No grade available.</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <a class="btn btn-black bg-black text-white fw-bold mb-2 ms-1" data-bs-toggle="modal" data-bs-target="#add_grade">Add Grade</a>
+                        </div>
+                        </div>
+                        </div>
+                    </div>
+                    {% comment %} end class or grade {% endcomment %}
+                           {% comment %} delete {% endcomment %}
+                        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to delete <strong id="delete_team_name">Unknown </strong>?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#grade" >Cancel</button>
+                                    <a href="?action=delete_grade&id=" class="btn btn-danger" id="team_delete_action_btn">Delete</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% comment %} end delete {% endcomment %}
+                    <div class="table-blk">
+                        <table id="athletesTable" class="table border-0">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Full Name </th>
+                                    {% comment %} <th>Last Name</th> {% endcomment %}
+                                    <th>Email Address</th>
+                                    {% comment %} <th>User Name</th> {% endcomment %}
+                                    <th>Position</th>
+                                    <th>Badges Earned</th>
+                                    <th>Jersey No</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for athlete in athletes %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{athlete.first_name|title}} {{athlete.last_name|title}}</td>
+                                    {% comment %} <td>{{athlete.last_name|title}}</td> {% endcomment %}
+                                    <td>{{athlete.email}} ({{athlete.username}})</td>
+                                    {% comment %} <td>{{athlete.username}}</td> {% endcomment %}
+                                    <td>{{athlete.player_profile.position.name}}</td>
+                                    <td>{{athlete.badge.all.count}}</td>
+                                    <td> {% if athlete.player_profile.jersey_number %} {{athlete.player_profile.jersey_number}} {% else %} Not assign {% endif %} </td>
+                                    <td>
+                                        {% if athlete.is_active %}
+                                        <span class="table-status badge bg-light text-success">Active</span>
+                                        {% else %}
+                                        <span class="table-status badge bg-light text-danger">Deactive </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="table-action">
+                                            <a href="{% url "athlete_profile" pk=athlete.id %}{% if request.GET.from %}?from={{request.GET.from }}&to={{request.GET.to}} 
+                                            {% endif %}" class="table-eye">
+                                                <img src="{% static "images/table/eye.png" %}">
+                                            </a>
+                                            {% if request.user.is_superuser or request.user.user_role == "ar_staff" %}
+                                            <button class="table-trash" data-bs-toggle="modal" data-bs-target="#deleteModal{{athlete.id}}">
+                                              <img src="{% static "images/table/trash.png" %}">
+                                            </button>
+                                            {% if athlete.is_active %}
+                                            <span class="table-check" data-bs-toggle="modal" data-bs-target="#deactiveModal{{athlete.id}}">
+                                                <img src="{% static "images/table/checked.png" %}">
+                                            </span>
+                                            {% else %}
+                                            <span class="table-check" data-bs-toggle="modal" data-bs-target="#activeModal{{athlete.id}}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                                    <rect width="24" height="14" x="0" y="5" rx="7" ry="7" fill="#ccc"/>
+                                                    <circle cx="7" cy="12" r="5" fill="#fff"/>
+                                                  </svg>  
+                                            </span>
+                                            {% endif %}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% comment %} delete modal {% endcomment %}
+                                
+                                <div class="modal fade" id="deleteModal{{athlete.id}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                      <div class="modal-content">
+                                        <div class="modal-header">
+                                          <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete {{athlete.username}} ?
+                                        </div>
+                                        <div class="modal-footer">
+                                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                          <a href="?action=delete&id={{athlete.id}}&page={{page_number}}{% if query %}&q={{query}}{% endif %}" class="btn btn-danger" >Delete</a>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                             
+                                  {% if athlete.is_active %}
+                                  {% comment %} deactive model {% endcomment %}
+                                  <div class="modal fade" id="deactiveModal{{athlete.id}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                      <div class="modal-content">
+                                        <div class="modal-header">
+                                          <h5 class="modal-title" id="deleteModalLabel">Confirm Deactivation</h5>
+                                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to deactive {{athlete.username}} ?
+                                        </div>
+                                        <div class="modal-footer">
+                                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                          <a  href="?action=deactivate&id={{athlete.id}}&page={{page_number}}{% if query %}&q={{query}}{% endif %}" class="btn btn-warning text-white">Deactive</a>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {% else %}
+                                       {% comment %} actice modal {% endcomment %}
+                                       <div class="modal fade" id="activeModal{{athlete.id}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                          <div class="modal-content">
+                                            <div class="modal-header">
+                                              <h5 class="modal-title" id="deleteModalLabel">Confirm Activation</h5>
+                                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Are you sure you want to activate {{athlete.username}} ?
+                                            </div>
+                                            <div class="modal-footer">
+                                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                              <a  href="?action=activate&id={{athlete.id}}&page={{page_number}}{% if query %}&q={{query}}{% endif %}" class="btn btn-success">Activate</a>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    {% endif %}
+                                  {% comment %}  {% endcomment %}
+                                {% endfor %}
+                                                                      
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% comment %} pagination {% endcomment %}
+                    {% include "pagination.html" with page_obj=athletes %} 
+                    
+                    {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+{% endblock content %}
+
+{% block js %}
+{% comment %} <script>
+    $(document).ready(function () {
+        let table = $('#athletesTable').DataTable({
+            "paging": false,
+            "lengthChange": false,
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "dom": "lrtip",
+            "order": []  
+        });
+
+        
+        $('#searchInput').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+    
+        
+        $('#sortBy').on('change', function () {
+            console.log("Search:", this.value);
+            let column = $(this).val() === "badges_earned" ? 6 : 1;
+            console.log(column);
+            table.order([column, 'asc']).draw();
+        });
+    
+      
+    });
+</script> {% endcomment %}
+
+
+<script>
+    $(document).ready(function () {
+        let table = $('#athletesTable').DataTable({
+            paging: false,
+            lengthChange: false,
+            searching: true,
+            ordering: true,
+            info: false,
+            autoWidth: false,
+            dom: "lrtip",
+            order: [],
+            columnDefs: [
+                { targets: 5, type: "num" }, // Badges Earned
+                { targets: 6, type: "num" }  // Jersey No
+            ]
+        });
+
+        const columnMap = {
+            "first_name": 0,
+            "last_name": 1,
+            "email_address": 2,
+            "user_name": 3,
+            "position": 4,
+            "badges_earned": 5,
+            "jersey_number": 6,
+            "status": 7
+        };
+
+        // Custom search
+        $('#searchInput').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+
+        // Custom sort
+        $('#sortBy').on('change', function () {
+            let selected = $(this).val();
+            let columnIndex = columnMap[selected];
+
+            if (columnIndex !== undefined) {
+                // Default to ascending sort
+                table.order([columnIndex, 'asc']).draw();
+            }
+        });
+    });
+</script>
+
+<script>
+    $(document).ready(function() {
+        function tableToCsv(table, delimiter = ',') {
+        if (!(table instanceof HTMLTableElement)) throw new Error('table must be an HTMLTableElement');
+
+        const rows = [];
+        const rowNodes = table.querySelectorAll('tr');
+
+        for (const tr of rowNodes) {
+            const cells = [...tr.querySelectorAll('th,td')];
+
+            // skip if no cells
+            if (cells.length === 0) {
+            rows.push('');
+            continue;
+            }
+
+            const values = cells
+            .map((cell, i) => {
+                // ❌ Skip "Actions" column (last column)
+                if (i === cells.length - 1) return null;
+
+                // convert <br> to \n
+                const clone = cell.cloneNode(true);
+                clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+                let text = clone.textContent.trim();
+
+                // escape quotes
+                text = text.replace(/"/g, '""');
+
+                // wrap if contains delimiter/newline/quotes
+                if (text.includes(delimiter) || text.includes('\n') || text.includes('"')) {
+                return `"${text}"`;
+                }
+                return text;
+            })
+            .filter(v => v !== null); // remove skipped columns
+
+            rows.push(values.join(delimiter));
+        }
+
+        return rows.join('\r\n');
+        }
+
+        function downloadCsv(csvContent, filename = 'export.csv') {
+            const bom = new Uint8Array([0xEF, 0xBB, 0xBF]); // Excel-safe BOM
+            const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            URL.revokeObjectURL(url);
+        }
+
+
+        document.getElementById("exportBtn").addEventListener("click", () => {
+        const table = document.getElementById("athletesTable");
+        const csv = tableToCsv(table, ",");
+        downloadCsv(csv, "athletes.csv");
+    });
+
+
+    {% comment %} auto open form when error {% endcomment %}
+    {% if form_error %}
+       const gradeModal = new bootstrap.Modal(document.getElementById("add_grade"));
+        gradeModal.show();
+    {% endif %}
+    {% comment %}  {% endcomment %}
+    });
+</script>
+
+<script>
+        function open_delete_modal(team_id, team_name){
+        console.log("here", team_id)
+        document.getElementById("delete_team_name").innerText  = team_name;
+
+        let deleteBtn = document.getElementById("team_delete_action_btn");
+        deleteBtn.href = "?action=delete_grade&id=" + team_id;
+
+        let teamModalEl = document.getElementById("grade");
+        let teamModal = bootstrap.Modal.getInstance(teamModalEl);
+        if (teamModal) {
+            teamModal.hide();
+        }
+        let deleteModal = new bootstrap.Modal(document.getElementById("deleteModal"));
+        deleteModal.show();
+    }
+</script>
+
+{% endblock %}
+

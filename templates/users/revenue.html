@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Revenue details {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Revenue details" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% load user_filters%}
+
+{% block content %} 
+
+<section class="main-section spacer">
+    <div class="container">
+        <div class="wrapper-card p-0">
+            <div class="row gy-3">
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-wrap gap-3 flex-box mb-3">
+                        <h2>{{referer|title}} revenue details</h2>    
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="table border-0">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Email Address</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for usr in verification_users %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{usr.user.email}}</td>
+                                    <td>
+                                        {% if usr.status == "accept" %}
+                                          <span class="table-status badge bg-light text-success">Verified</span>
+                                        {% elif usr.status == "pending" %}
+                                         <span class="table-status badge bg-light text-warning">Pending </span>
+                                        {% else %}
+                                         <span class="table-status badge bg-light text-danger">Rejected</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="table-action">
+                                            <a href="{% url "identity_verification_detail" pk=usr.user.id %}" class="table-eye">
+                                                <img src="{% static "images/table/eye.png" %}">
+                                            </a>
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% comment %} pagination {% endcomment %}
+                    {% include "pagination.html" with page_obj=verification_users %}                   
+                    {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+{% endblock content %}

@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sports Management{% endblock %}
+
+{% block nav_title %}
+    {% with page_title="Sports Management" %}
+        {{ block.super }}
+    {% endwith %}
+{% endblock %}
+
+{% block content %}
+    <section class="main-section spacer">
+        <div class="container">
+            <div class="wrapper-card p-0">
+                <div class="row gy-3">
+                    <div class="col-xl-12">
+
+                        <!-- Page Header -->
+                        <div class="sub_heading_card sub-heading flex-wrap gap-3 flex-box mb-3">
+                            <h2>Sports List</h2>
+
+                            <div class="d-flex align-items-center gap-2 ms-auto">
+                                <!-- Search Form -->
+                                <form method="get" class="d-flex align-items-center gap-2">
+                                    <input type="text"
+                                           name="q"
+                                           class="form-control"
+                                           placeholder="Search..."
+                                           title="Type to search"
+                                           value="{{ request.GET.q }}"
+                                           style="max-width: 220px;">
+                                    <button class="btn border border-1 ms-1" title="click to deep search">
+                                        <i class="fa fa-search"></i>
+                                    </button>
+                                     {% if query %}
+                                        <a href="{% url 'add_sport' %}" class="btn border border-1 ms-1 bg-dark text-white" title="clear search">
+                                          <i class="fa-solid fa-xmark"></i>    </a>
+                                      {% endif %}
+                                </form>
+
+                                <!-- Add Button -->
+                                <button class="btn fw-bold bg-black text-white px-4"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#addSportModal">
+                                    Add
+                                </button>
+
+                            </div>
+                        </div>
+
+                        <!-- Sports Table -->
+                        <div class="table-blk">
+                            <table id="sportsTable" class="table border-0">
+                                <thead>
+                                    <tr>
+                                        <th>S.No</th>
+                                        <th>Sport Name</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sport in sports %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td class="fw-semibold">{{ sport.name }}</td>
+                                            <td>
+                                                <span class="table-action">
+                                                    {% if perms.users.edit_events %}
+                                                        <a href="javascript:void(0)"
+                                                           class="table-eye"
+                                                           data-bs-toggle="modal"
+                                                           data-bs-target="#editSportModal{{ sport.id }}">
+                                                            <img src="{% static 'images/edit.png' %}">
+                                                        </a>
+                                                    {% endif %}
+
+                                                    <button class="table-trash"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#deleteModal{{ sport.id }}">
+                                                        <img src="{% static 'images/table/trash.png' %}">
+                                                    </button>
+                                                </span>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Delete Modal -->
+                                        <div class="modal fade" id="deleteModal{{ sport.id }}" tabindex="-1">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title fw-bold">Confirm Delete</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        Are you sure you want to delete <strong>{{ sport.name }}</strong>?
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                                            Cancel
+                                                        </button>
+                                                        <form method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="delete_id" value="{{ sport.id }}">
+                                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Edit Modal -->
+                                        <div class="modal fade" id="editSportModal{{ sport.id }}" tabindex="-1">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <form method="post">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="edit_id" value="{{ sport.id }}">
+
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title fw-bold">Edit Sport</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+
+                                                        <div class="modal-body">
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-semibold">Sport Name</label>
+                                                                <input type="text"
+                                                                       name="name"
+                                                                       class="form-control"
+                                                                       value="{{ sport.name }}"
+                                                                       required>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                                                Cancel
+                                                            </button>
+                                                            <button type="submit" class="btn bg-black text-white px-4">
+                                                                Update
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    {% empty %}
+                                        <tr class="no-data">
+                                            <td class="text-center text-muted">No sports added yet</td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% include "pagination.html" with page_obj=sports %}
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Add Sport Modal -->
+    <div class="modal fade" id="addSportModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">Add Sport</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Sport Name</label>
+                            {{ form.name }}
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn bg-black text-white px-4">
+                            Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(document).ready(function () {
+            let table = $('#sportsTable').DataTable({
+                paging: false,
+                lengthChange: false,
+                searching: true,
+                ordering: true,
+                info: false,
+                autoWidth: false,
+                dom: "lrtip",
+                order: []
+            });
+
+
+            $('#searchInput').on('keyup', function () {
+                table.search(this.value).draw();
+            });
+        });
+    </script>
+{% endblock %}

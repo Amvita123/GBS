@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Roster PDF</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            font-size: 13px;
+        }
+
+        h1, h2, h3 {
+            margin: 0 0 10px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table th, table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        table th {
+            background: #f4f4f4;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .photo {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+{% load user_filters%}
+<body>
+
+    <!-- Header -->
+    <h1>Roster Report</h1>
+    <h3>{{ roster.name|title }}</h3>
+    <p><strong>Organization:</strong> {{ roster.organization.name|title }}</p>
+    <p><strong>Created By:</strong> 
+        {{ roster.organization.created_by.first_name }} {{ roster.organization.created_by.last_name }}
+        ({{ roster.organization.created_by.email }})
+    </p>
+    <p><strong>Grade:</strong> {{ roster.grade.name }}</p>
+
+
+    <!-- Players Section -->
+    <div class="section">
+        <h2>Players</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Name</th>
+                    <th>DOB</th>
+                    <th>Class</th>
+                    <th>Jersey No</th>
+                    <th>Photo</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for player in roster.roster_player.all %}
+                {% get_verification player.player as status %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ player.player.first_name|title }} {{ player.player.last_name|title }}</td>
+                    <td>
+                        {% if status %}
+                            {{ status.dob|date:"m-d-Y" }}
+                        {% else %}
+                            {{ player.player.dob|date:"m-d-Y" }} (Unverified)
+                        {% endif %}
+                    </td>
+                    <td>{{ player.player.player.grade.name }}</td>
+                    <td>
+                        {% if player.player.player.jersey_number %}
+                            {{ player.player.player.jersey_number }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td class="center">
+                        {% if status %}
+                             <img src="{{ request.scheme }}://{{ request.get_host }}{{ status.photo.url }}" class="photo">
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="center">No players available</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+    <!-- Coaches Section -->
+    <div class="section">
+        <h2>Coaches</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Name</th>
+                    <th>Coach Type</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for coach in roster.roster_coach.all %}
+                {% get_verification coach.coach as status %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ coach.coach.first_name|title }} {{ coach.coach.last_name|title }}</td>
+                    <td>{{ coach.coach.coach_type.name }}</td>
+                    <td>
+                        {% if status %}
+                            Verified
+                        {% else %}
+                            Unverified
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="4" class="center">No coaches available</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

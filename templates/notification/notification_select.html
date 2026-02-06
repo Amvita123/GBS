@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static %}
+{% block nav_title %}
+    {% with page_title="Select Push Notification" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% block content %}
+<section class="common-section spacer">
+    <div class="container">
+      <div class="dashboard-card-wrapper">
+
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-3 g-4 mt-2">
+          <div class="col">
+            <a href="{% url 'athlete_management' %}{% if from_date and to_date %}?from={{from_date}}&to={{to_date}} {% endif %}">
+              <div class="dashboard-card-item">
+                <div class="dashboard-card-content">
+                  <div class="dashboard-card-info">
+                    <h2>Total Registred Athletes</h2>
+                    <p>{{athletes}}</p>
+                  </div>
+                  <div class="dashboard-card-icon">
+                    <img src="{% static 'images/dashboard/athletes.png' %}" alt="Icon">
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <div class="col">
+            <a href="{% url 'coach_management' %}{% if from_date and to_date %}?from={{from_date}}&to={{to_date}} {% endif %}">
+              <div class="dashboard-card-item">
+                <div class="dashboard-card-content">
+                  <div class="dashboard-card-info">
+                    <h2>Event</h2>
+                    <p>{{coach}}</p>
+                  </div>
+                  <div class="dashboard-card-icon" >
+                    <img src="{% static 'images/sidebar/event.png' %}" alt="Icon">
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+
+        </div>
+      </div>
+    
+    </div>
+  </section>
+{% endblock%}
+
+{% block js %}
+
+{% endblock %}

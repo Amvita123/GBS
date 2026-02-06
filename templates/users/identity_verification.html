@@ -1,0 +1,522 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Identity Verification {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Identity Verification" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% load user_filters%}
+
+{% block content %}
+
+<section class="main-section spacer">
+    <div class="container">
+        <div class="wrapper-card p-0">
+            <div class="row gy-3">
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-wrap gap-3 flex-box mb-3">
+                        <h2>Identity Verification Users List</h2>
+                        <div class="d-flex">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Search..." >
+                            <div class="sort-by ms-1" style="width: 100%;">
+                                <select class="form-select" id="sortBy">
+                                    <option value="" disabled selected>Sort by</option>
+                                    <option value="0">First Name</option>
+                                    <option value="1">Last Name</option>
+                                    <option value="2">Email Address</option>
+                                    <option value="3">User Name</option>
+                                </select>
+                            </div>
+                            <a class="btn btn-black bg-black text-white fw-bold ms-2" data-bs-toggle="modal" data-bs-target="#team">Referrer</a>
+                            <a class="btn btn-black bg-black text-white fw-bold ms-2" data-bs-toggle="modal" data-bs-target="#document_type">Document</a>
+                            <a class="btn btn-black bg-black text-white fw-bold ms-2" data-bs-toggle="modal" data-bs-target="#athlete_types">Athlete</a>
+                          </div>
+
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="table border-0">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Legal Name </th>
+                                    <th>Email Address</th>
+                                    <th>Date</th>
+                                    <th>Role</th>
+                                    <th>Referrer</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for usr in verification_users %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{usr.legal_full_name|title}}</td>
+                                    <td>{{usr.user.email}}</td>
+                                    <td>
+
+                                        {% user_verification_status usr.user as status %}
+                                        {% if status == "first_submit" %}
+                                            <p>{{usr.created_at|date:"m-d-Y h:i A"}}<span class="badge bg-light text-success">First</span></p>
+                                        {% elif "resubmit" in status %}
+                                            <p>{{usr.created_at|date:"m-d-Y h:i A"}}<span class="badge bg-light text-info">{{status|title}}</span></p>
+                                        {% else %}
+                                            <p>{{usr.created_at|date:"m-d-Y h:i A"}}<span class="badge bg-light text-warning">{{status|title}}</span></p>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{usr.user.user_role}}</td>
+                                    <td> {%if usr.refer_by %} {{usr.refer_by}} {% endif %}</td>
+                                    <td>
+                                        {% if usr.status == "accept" %}
+                                          <span class="table-status badge bg-light text-success">Verified</span>
+                                        {% elif usr.status == "pending" %}
+                                         <span class="table-status badge bg-light text-warning">Pending </span>
+                                        {% elif usr.status == "expiring" %}
+                                         <span class="table-status badge bg-light text-danger">Expiring </span>
+                                        {% elif usr.status == "expired" %}
+                                         <span class="table-status badge bg-light text-danger">Expired </span>
+                                        {% else %}
+                                         <span class="table-status badge bg-light text-danger">Rejected</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="table-action">
+                                            <a href="{% url "identity_verification_detail" pk=usr.user.id %}" class="table-eye">
+                                                <img src="{% static "images/table/eye.png" %}">
+                                            </a>
+
+                                            <button class="table-trash" onclick="open_identity_delete_modal('{{usr.user.id}}','{{usr.legal_full_name}}')">
+                                                <img src="{% static 'images/table/trash.png' %}">
+                                            </button>
+
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% comment %} pagination {% endcomment %}
+                    {% include "pagination.html" with page_obj=verification_users %}
+                    {% comment %}  {% endcomment %}
+
+                    {% comment %} refer {% endcomment %}
+                      <div class="modal fade" id="team" tabindex="-1" aria-labelledby="team" aria-hidden="true">
+                       <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Verification Referrers Organization</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+
+                        <div class="modal-body table-blk">
+                            <table class="display border-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>S.No</th>
+                                            <th>Name</th>
+                                            <th>Revenue</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for org in refer_organization %}
+                                        <tr>
+                                            <td>{{forloop.counter}}</td>
+                                            <td>{{org.name|title}}</td>
+                                            <td>0</td>
+                                            <td>
+                                                <span class="table-action">
+                                                    <button class="table-trash" onclick="open_delete_modal('{{org.id}}', '{{org.name}}')">
+                                                        <img src="{% static "images/table/trash.png" %}">
+                                                    </button>
+
+                                                    <a class="table-trash" href="{% url "referer_revenue_detail" org.name %}" title="View revenue details">
+                                                        <i class="bi bi-currency-exchange"></i>
+                                                    </a>
+                                                </span>
+                                            </td>
+                                        </tr>
+
+                                        {% empty %}
+                                        <tr>
+                                        <td colspan="3" class="text-center text-muted">No Referrers available...</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <a class="btn btn-black bg-black text-white fw-bold mb-2 ms-1" data-bs-toggle="modal" data-bs-target="#addteam">Add Referrer</a>
+                        </div>
+                        </div>
+                        </div>
+                    </div>
+                    {% comment %} add Referrer {% endcomment %}
+                    <div class="modal fade" id="addteam" tabindex="-1" aria-labelledby="addteam" aria-hidden="true">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="addteam"> Add Referrers</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="col-12 my-3">
+                                        <label for="name" class="form-label">Name</label>
+                                        <input type="text" class="form-control" name="name" id="name" placeholder="enter name" required>
+                                        <div class="text-danger">{{ form.name.errors }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#team" style="background:#757575 !important">Cancel</button>
+                                    <button type="submit" class="btn bg-black text-white" name="add_referrer" value="add_referrer">Add</button>
+                                </div>
+                            </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% comment %} end refer {% endcomment %}
+
+                    {% comment %} delete {% endcomment %}
+                        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to delete <strong id="delete_team_name">Unknown </strong>?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#team" >Cancel</button>
+                                    <a href="?action=delete_referrer&id=" class="btn btn-danger" id="team_delete_action_btn">Delete</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% comment %} end delete {% endcomment %}
+
+
+                    {% comment %} document type {% endcomment %}
+                      <div class="modal fade" id="document_type" tabindex="-1" aria-labelledby="document_type" aria-hidden="true">
+                       <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Verification document type</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+
+                        <div class="modal-body table-blk">
+                            <table class="display border-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>S.No</th>
+                                            <th>Name</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for doc in document_types %}
+                                        <tr>
+                                            <td>{{forloop.counter}}</td>
+                                            <td>{{doc.title|title}}</td>
+                                            <td>
+                                                <span class="table-action">
+                                                    <button class="table-trash" onclick="open_document_delete_modal('{{doc.id}}', '{{doc.name}}')">
+                                                        <img src="{% static "images/table/trash.png" %}">
+                                                    </button>
+                                                </span>
+                                            </td>
+                                        </tr>
+
+                                        {% empty %}
+                                        <tr>
+                                        <td colspan="3" class="text-center text-muted">No Referrers available...</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <a class="btn btn-black bg-black text-white fw-bold mb-2 ms-1" data-bs-toggle="modal" data-bs-target="#adddocument_type">Add Document Type</a>
+                        </div>
+                        </div>
+                        </div>
+                    </div>
+                    {% comment %} add document type {% endcomment %}
+                    <div class="modal fade" id="adddocument_type" tabindex="-1" aria-labelledby="adddocument_type" aria-hidden="true">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title"> Add New Document Type</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="col-12 my-3">
+                                        <label for="name" class="form-label">Name</label>
+                                        <input type="text" class="form-control" name="name" id="name" placeholder="enter doc name" required>
+                                        <div class="text-danger">{{ form.name.errors }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#document_type" style="background:#757575 !important">Cancel</button>
+                                    <button type="submit" class="btn bg-black text-white" name="add_document_type" value="add_document_type">Add</button>
+                                </div>
+                            </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% comment %} delete document {% endcomment %}
+                    <div class="modal fade" id="DocdeleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to delete <strong id="delete_doc_name">Unknown </strong>?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#team" >Cancel</button>
+                                    <a href="?action=delete_doc&id=" class="btn btn-danger" id="doc_delete_action_btn">Delete</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% comment %} end document type {% endcomment %}
+
+
+                    {% comment %} athlete type {% endcomment %}
+                      <div class="modal fade" id="athlete_types" tabindex="-1" aria-labelledby="athlete_types" aria-hidden="true">
+                       <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Verification athlete type</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+
+                        <div class="modal-body table-blk">
+                            <table class="display border-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>S.No</th>
+                                            <th>Name</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for athlete in athlete_types %}
+                                        <tr>
+                                            <td>{{forloop.counter}}</td>
+                                            <td>{{athlete.title|title}}</td>
+                                            <td>
+                                                <span class="table-action">
+                                                    <button class="table-trash" onclick="open_athlete_delete_modal('{{athlete.id}}', '{{athlete.title}}')">
+                                                        <img src="{% static "images/table/trash.png" %}">
+                                                    </button>
+                                                </span>
+                                            </td>
+                                        </tr>
+
+                                        {% empty %}
+                                        <tr>
+                                        <td colspan="3" class="text-center text-muted">No Athlete available...</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <a class="btn btn-black bg-black text-white fw-bold mb-2 ms-1" data-bs-toggle="modal" data-bs-target="#add_athlete_types">Add Athlete</a>
+                        </div>
+                        </div>
+                        </div>
+                    </div>
+                    {% comment %} add athlete type {% endcomment %}
+                    <div class="modal fade" id="add_athlete_types" tabindex="-1" aria-labelledby="add_athlete_types" aria-hidden="true">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="addteam"> Add New Athlete Type</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="col-12 my-3">
+                                        <label for="name" class="form-label">Title</label>
+                                        <input type="text" class="form-control" name="title" id="title" placeholder="enter athlete type title" required>
+                                        <div class="text-danger">{{ form.title.errors }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#team" style="background:#757575 !important">Cancel</button>
+                                    <button type="submit" class="btn bg-black text-white" name="add_athlete_type" value="add_athlete_type">Add</button>
+                                </div>
+                            </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% comment %} delete athlete {% endcomment %}
+                    <div class="modal fade" id="athletedeleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to delete <strong id="delete_athlete_name">Unknown </strong>?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#athlete_types" >Cancel</button>
+                                    <a href="?action=delete_athlete&id=" class="btn btn-danger" id="athlete_delete_action_btn">Delete</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% comment %} end athlete type {% endcomment %}
+
+                    {% comment %} delete athlete {% endcomment %}
+                    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to delete <strong id="delete_team_name">Identity verification </strong>?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#" >Cancel</button>
+                                    <a href="?action=delete_identity&id=" class="btn btn-danger" id="team_delete_action_btn">Delete</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% comment %} end athlete type {% endcomment %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{% endblock content %}
+
+{% block js %}
+<script>
+    $(document).ready(function () {
+        let table = $('#athletesTable').DataTable({
+            "paging": false,
+            "lengthChange": false,
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "dom": "lrtip",
+            "order": []
+        });
+
+
+        $('#searchInput').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+
+
+        $('#sortBy').on('change', function () {
+            let column = parseInt($(this).val());
+            if (!isNaN(column)) {
+                console.log("Sorting by column:", column);
+                table.order([column, 'asc']).draw();
+            }
+        });
+
+
+    });
+</script>
+
+<script>
+    function open_delete_modal(team_id, team_name){
+        document.getElementById("delete_team_name").innerText  = team_name;
+
+        let deleteBtn = document.getElementById("team_delete_action_btn");
+        deleteBtn.href = "?action=delete_referrer&id=" + team_id;
+
+        let teamModalEl = document.getElementById("team");
+        let teamModal = bootstrap.Modal.getInstance(teamModalEl);
+        if (teamModal) {
+            teamModal.hide();
+        }
+        let deleteModal = new bootstrap.Modal(document.getElementById("deleteModal"));
+        deleteModal.show();
+    }
+
+
+    function open_document_delete_modal(team_id, team_name){
+        document.getElementById("delete_doc_name").innerText  = team_name;
+
+        let deleteBtn = document.getElementById("doc_delete_action_btn");
+        deleteBtn.href = "?action=delete_doc&id=" + team_id;
+
+        let teamModalEl = document.getElementById("document_type");
+        let teamModal = bootstrap.Modal.getInstance(teamModalEl);
+        if (teamModal) {
+            teamModal.hide();
+        }
+        let deleteModal = new bootstrap.Modal(document.getElementById("DocdeleteModal"));
+        deleteModal.show();
+    }
+
+
+    function open_athlete_delete_modal(team_id, team_name){
+        document.getElementById("delete_athlete_name").innerText  = team_name;
+
+        let deleteBtn = document.getElementById("athlete_delete_action_btn");
+        deleteBtn.href = "?action=delete_athlete&id=" + team_id;
+
+        let teamModalEl = document.getElementById("athlete_types");
+        let teamModal = bootstrap.Modal.getInstance(teamModalEl);
+        if (teamModal) {
+            teamModal.hide();
+        }
+        let deleteModal = new bootstrap.Modal(document.getElementById("athletedeleteModal"));
+        deleteModal.show();
+    }
+
+    function open_identity_delete_modal(user_id, user_name){
+        document.getElementById("delete_team_name").innerText = user_name;
+
+        let deleteBtn = document.getElementById("team_delete_action_btn");
+        deleteBtn.href = "?action=delete_identity&id=" + user_id;
+
+        let deleteModal = new bootstrap.Modal(document.getElementById("deleteModal"));
+        deleteModal.show();
+    }
+
+</script>
+{% endblock %}
+

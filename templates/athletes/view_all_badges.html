@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Badges Management {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Badges Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% block css %}
+
+    <!-- Add some styles -->
+    <style>
+        .badge-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); 
+            display: flex;
+            flex-direction: column;
+            gap: 10px; 
+            border: none; 
+        }
+        
+        .badge-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: none !important; 
+        }
+        
+        .badge-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+        }
+        
+        .badge-icon img {
+            width: 70px;
+            height: 70px;
+            border-radius: 5px;
+            object-fit: cover; 
+            background-color: transparent !important;
+        }
+        
+        .badge-description {
+            padding-top: 10px;
+            border-top: none !important; 
+        }
+        
+        .badge-detail {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #555;
+            border-bottom: none !important;
+        }
+
+        .loader-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        
+    </style>
+
+{% endblock css %}
+
+
+{% block content %} 
+
+<section class="main-section spacer">
+    <div class="container">
+        <div class="wrapper-card p-0 pb-3">
+            <div class="row gy-3">                            
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-wrap gap-3 flex-box mb-3">
+                        <h2>Badges List</h2>    
+                        <div class="d-flex">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Search..." > 
+                            {% comment %} <div class="sort-by ms-1">
+                                <select class="form-select" id="sortBy">
+                                    <option value="" disabled selected>Sort by</option>
+                                    <option value="0">First Name</option>
+                                    <option value="1">Last Name</option>
+                                    <option value="2">Email Address</option>
+                                    <option value="3">User Name</option>
+                                    <option value="4">Status</option>
+                                </select>
+                            </div> {% endcomment %}
+                          </div>                                
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="table border-0">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Badge Name</th>
+                                    <th>Description</th>
+                                    <th>Weight</th>
+                                    <th>Rank</th>
+                                    <th>BadgeType</th>
+                                    {% comment %} <th>Status</th> {% endcomment %}
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for badge in badges %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{badge.name|title}}</td>
+                                    <td style="max-width: 300px;">{{badge.description}}</td>
+                                    <td>
+                                        {% if badge.weight %}
+                                        {{badge.weight}}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{badge.ranking}}</td>
+                                    <td>
+                                        {% if badge.is_admin_assignable %}
+                                        <span class="table-status fw-bold text-primary">Admin</span>
+                                        {% else %}
+                                        <span class="table-status fw-bold text-warning">Rated</span>
+                                        {% endif %}
+                                    </td>
+                                    {% comment %} <td>
+                                        {% if badge.is_active %}
+                                        <span class="table-status badge bg-light text-success">Active</span>
+                                        {% else %}
+                                        <span class="table-status badge bg-light text-danger">Deactive </span>
+                                        {% endif %}
+                                    </td> {% endcomment %}
+                                    <td>
+                                        <span class="table-action">
+                                            <a class="table-eye" data-bs-toggle="modal" data-bs-target="#levelModal{{badge.id}}" onclick="showLoader('{{ badge.id }}')">
+                                                <img src="{% static "images/table/eye.png" %}">                                                                   
+                                            </a>     
+
+                                            <span class="table-check" data-bs-toggle="modal" data-bs-target="#editModal{{badge.id}}">
+                                                <img src="{% static "images/edit.png" %}">                                                  
+                                            </span>                                                      
+                                          
+                                            <button class="table-trash" data-bs-toggle="modal" data-bs-target="#deleteModal{{badge.id}}">
+                                              <img src="{% static "images/table/trash.png" %}">                                                                  
+                                            </button>
+                                           
+                                            
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% comment %} badge levels {% endcomment %}
+                                <div class="modal fade" id="levelModal{{badge.id}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                      <div class="modal-content">
+                                        <div class="modal-header">
+                                          <h5 class="modal-title" id="deleteModalLabel">{{badge.name|title}} Details</h5>
+                                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body" id="modal-content">
+                                            <div id="modal-loader-{{ badge.id }}" class="loader-container">
+                                                <div class="spinner"></div>
+                                            </div>
+                                            <div id="modal-content-{{ badge.id }}" style="display: none;">
+                                                <div class="badge-levels">
+                                                    {% for level in badge.badge_level.all %}
+                                                    <div class="badge-card my-2">
+                                                        <div class="badge-card-header">
+                                                            <h3 class="badge-title">{{ level.get_name_display }}</h3>
+                                                            <div class="badge-icon">
+                                                                {% if level.icon %}
+                                                                <img src="{{ level.icon.url }}" alt="{{ level.name }} Icon">
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                        {% with badge_template=level.badge_template.all %}
+                                                        {% if badge_template %}
+                                                        <div class="badge-description">
+                                                            <h5> Template Checklist</h5>
+                                                            {% for i in badge_template %}
+                                                            <p class="badge-detail">{{ i.title }}</p>
+                                                            {% endfor %}
+                                                        </div>
+                                                        {% endif %}
+                                                        {% endwith %}
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                          
+                                        </div>
+                                        
+                                        <div class="modal-footer">
+                                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                {% comment %} delete modal {% endcomment %}
+                                
+                                <div class="modal fade" id="deleteModal{{badge.id}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                      <div class="modal-content">
+                                        <div class="modal-header">
+                                          <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete {{badge.name}} ?
+                                        </div>
+                                        <div class="modal-footer">
+                                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                          <a href="?action=delete&id={{badge.id}}&page={{page_number}}" class="btn btn-danger" >Delete</a>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                             
+                                    {% comment %} editModal {% endcomment %}
+                                    <div class="modal fade common-modal" id="editModal{{badge.id}}" tabindex="-1" aria-labelledby="addNewExterminatorLabel" aria-modal="true" role="dialog">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                          <div class="modal-content">
+                                            <div class="modal-body">
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                <form method="post" action="">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="id" value="{{ badge.id }}" required> 
+                                                    <div class="common-box-body">            
+                                                        <h2>Edit {{badge.name}}</h2>
+                                                        <div class="common-modal-form">
+                                                            <div class="row gy-4">
+                                                                <div class="col-lg-12">
+                                                                    <div class="common-modal-field">
+                                                                        <label>Name</label>
+                                                                        <input type="text" value="{% if form.name.value %} {{form.name.value}} {% else %} {{badge.name}} {% endif%}" name="name" class="form-control" placeholder="Enter badge  name" required>
+                                                                        <div class="form-error text-danger">{{ form.name.errors }}</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-12">
+                                                                    <div class="common-modal-field">
+                                                                        <label>Weight</label>
+                                                                        <input type="number" value="{{badge.weight}}" name="weight" class="form-control" placeholder="Enter badge weight">
+                                                                        <div class="form-error text-danger">{{ form.weight.errors }}</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-12">
+                                                                    <div class="common-modal-field">
+                                                                        <label>Rank</label>
+                                                                        <input type="number" value="{{badge.ranking}}" name="ranking" class="form-control" placeholder="Enter badge rank">
+
+                                                                        <div class="form-error text-danger">{{ form.ranking.errors }}</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-12">
+                                                                    <div class="common-modal-field">
+                                                                        <label>Description</label>
+                                                                        <textarea class="form-control"  placeholder="description" name="description">{{badge.description}}</textarea>
+                                                                        <div class="form-error text-danger">{{ form.description.errors }}</div>
+                                                                    </div>
+                                                                </div>
+                                                             
+                                                            </div>                                    
+                                                        </div>
+                                                        <div class="common-modal-btns">
+                                                            <button class="btn black-btn fw-bold" >Submit</button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                          </div>
+                                        </div>
+                                    </div>
+                                  {% comment %}  {% endcomment %}
+                                {% endfor %}
+                                                                      
+                            </tbody>
+                        </table>
+                    </div>
+                    
+            {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{% endblock content %}
+
+{% block js %}
+<script>
+    $(document).ready(function () {
+        let table = $('#athletesTable').DataTable({
+            "paging": false,
+            "lengthChange": false,
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "dom": "lrtip",
+            "order": []  
+        });
+
+        
+        $('#searchInput').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+    
+        
+        $('#sortBy').on('change', function () {
+            let column = parseInt($(this).val());
+            if (!isNaN(column)) { 
+                console.log("Sorting by column:", column);
+                table.order([column, 'asc']).draw();
+            }
+        });
+    
+      
+    });
+
+    {% comment %} modal loader {% endcomment %}
+    function showLoader(badgeId) {
+        var loader = document.getElementById("modal-loader-" + badgeId);
+        var content = document.getElementById("modal-content-" + badgeId);
+    
+        if (loader && content) {
+            // Show loader, hide content
+            loader.style.display = "flex";
+            content.style.display = "none";
+    
+            // Simulate data fetching (replace with AJAX if needed)
+            setTimeout(function () {
+                loader.style.display = "none";
+                content.style.display = "block";
+            }, 1500); // Adjust delay if necessary
+        }
+    }
+
+    
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        {% if form.errors %}
+         $('#editModal{{badge.id}}').modal('show');
+        {% endif %}
+    });
+</script>
+{% endblock %}
+

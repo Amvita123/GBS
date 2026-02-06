@@ -1,0 +1,230 @@
+{% load static %}
+<div class="side-navbar">
+    <button class="closeBtn"><i class="fa-solid fa-times"></i> </button>
+    <div class="navbar_innerdiv h-100 d-flex justify-content-between flex-column gap-3 pb-4">
+      <ul class="nav flex-column position-relative pb-3">
+        <li class="nav-item sidebar-logo">
+          <a class="navbar-brand text-white" href="javascript:void(0)"><img src="{% static 'images/logo-preview.png' %}"  alt="Logo" /></a>
+          {% comment %} style="filter: brightness(0) invert(1);"  {% endcomment %}
+        </li>
+         <li class="nav-item sidebar-link">
+          <a class="nav-link  {% if "/" == request.path %}active{% endif %}" href="{% url 'dashboard' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/dashboard.png' %}" alt="Dashboard"></span>
+            <span class="nav-text">Dashboard</span>
+          </a>
+        </li>
+        {% if request.user.is_superuser %}
+        <li class="nav-item sidebar-link ">
+          <a class="nav-link {% if "/athlete/" in request.path %}active{% endif %}" href="{% url 'athlete_management' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/athlee.png' %}" alt="Athlete"></span>
+            <span class="nav-text">Athlete Management</span>
+          </a>
+        </li>
+
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if page_coach %}active{% endif %}" href="{% url "coach_management" %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/platform.png' %}" alt="Coach"></span>
+            <span class="nav-text">Coaches Management</span>
+          </a>
+        </li>
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/fan/" in request.path %}active{% endif %}" href="{% url "fans_management" %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/fan.png' %}" alt="Fan"></span>
+            <span class="nav-text">Fans Management</span>
+          </a>
+        </li>
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/challenge/" in request.path %}active{% endif %}" href="{% url 'challenge_management' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/challenge.png' %}" alt="Challenge"></span>
+            <span class="nav-text">Challenges Management</span>
+          </a>
+        </li>
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/badges/" in request.path %}active{% endif %}" href="{% url 'badges_management' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/badges.png' %}" alt="Badge"></span>
+            <span class="nav-text">Badges Management</span>
+          </a>
+        </li>
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/event/" in request.path and "/event/transaction/" != request.path %}active{% endif %}" href="{% url 'event_management' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/event.png' %}" alt="Event"></span>
+            <span class="nav-text">Event Management</span>
+          </a>
+        </li>
+
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/event/transaction/" == request.path %}active{% endif %}" href="{% url 'transaction_management' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/transaction.svg' %}" alt="Event"></span>
+            <span class="nav-text">Event Transaction</span>
+          </a>
+        </li>
+
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/post-report/" in request.path %}active{% endif %}" href="{% url 'post_report_management' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/post.png' %}" alt="Report"></span>
+            <span class="nav-text">Post Reports Management</span>
+          </a>
+        </li>
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/notification/" in request.path %}active{% endif %}" href="{% url 'send_push_notification' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/notification.png' %}" alt="Notification"></span>
+            <span class="nav-text">Send Push Notifications</span>
+          </a>
+        </li>
+        
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/identity-verification/" in request.path %}active{% endif %}" href="{% url 'identity_verification' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/identification.svg' %}" alt="identity-verification"></span>
+            <span class="nav-text">Identity Verification</span>
+          </a>
+        </li>
+
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if page_org %}active{% endif %}" href="{% url 'organization_management' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/organization.svg' %}" alt="identity-verification"></span>
+            <span class="nav-text">Orgnization</span>
+          </a>
+        </li>
+
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/sub-admin/" in request.path %}active{% endif %}" href="{% url "sub_admin_management" %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/fan.png' %}" alt="Content"></span>
+            <span class="nav-text">Sub-admin Management</span>
+          </a>
+        </li>
+
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/content-management/" in request.path %}active{% endif %}" href="{% url "content_management" %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/note.png' %}" alt="Content"></span>
+            <span class="nav-text">Content Management</span>
+          </a>
+        </li>
+
+        <li class="nav-item sidebar-link">
+            <a class="nav-link {% if 'discount-management/' in request.path %}active{% endif %}" href="{% url 'discount_management' %}">
+                <span class="nav-icon">
+                    <img src="{% static 'images/sidebar/discount.png' %}" alt="Discount" height="25">
+                </span>
+                <span class="nav-text">Discount Management</span>
+            </a>
+        </li>
+
+          <li class="nav-item sidebar-link">
+              <a class="nav-link {% if "/settings/" in request.path %}active{% endif %}" href="{% url "settings" %}">
+                <span class="nav-icon"><i class="bi bi-gear ms-1" height="38px"></i></span>
+                <span class="nav-text">Settings</span>
+              </a>
+          </li>
+
+        {% comment %} for athlete start or work with anita {% endcomment %}
+
+        {% elif request.user.user_role == "ar_staff" %}
+                <li class="nav-item sidebar-link ">
+          <a class="nav-link {% if "/athlete/" in request.path %}active{% endif %}" href="{% url 'athlete_management' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/athlee.png' %}" alt="Athlete"></span>
+            <span class="nav-text">Athlete Management</span>
+          </a>
+        </li>
+
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if page_coach %}active{% endif %}" href="{% url "coach_management" %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/platform.png' %}" alt="Coach"></span>
+            <span class="nav-text">Coaches Management</span>
+          </a>
+        </li>
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/fan/" in request.path %}active{% endif %}" href="{% url "fans_management" %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/fan.png' %}" alt="Fan"></span>
+            <span class="nav-text">Fans Management</span>
+          </a>
+        </li>
+
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/event/" in request.path and "/event/transaction/" != request.path %}active{% endif %}" href="{% url 'event_management' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/event.png' %}" alt="Event"></span>
+            <span class="nav-text">Event Management</span>
+          </a>
+        </li>
+
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/post-report/" in request.path %}active{% endif %}" href="{% url 'post_report_management' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/post.png' %}" alt="Report"></span>
+            <span class="nav-text">Post Reports Management</span>
+          </a>
+        </li>
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/notification/" in request.path %}active{% endif %}" href="{% url 'send_push_notification' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/notification.png' %}" alt="Notification"></span>
+            <span class="nav-text">Send Push Notifications</span>
+          </a>
+        </li>
+
+        {% if perms.users.identity_verification %}
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/identity-verification/" in request.path %}active{% endif %}" href="{% url 'identity_verification' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/identification.svg' %}" alt="identity-verification"></span>
+            <span class="nav-text">Identity Verification</span>
+          </a>
+        </li>
+        {% endif %}
+
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if page_org %}active{% endif %}" href="{% url 'organization_management' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/organization.svg' %}" alt="identity-verification"></span>
+            <span class="nav-text">Orgnization</span>
+          </a>
+        </li>
+
+        {% else %} 
+        {% comment %} for sub admin {% endcomment %}
+        {% load user_filters %}
+        {% check_subscription request.user as subscription %}
+          <li class="nav-item sidebar-link ">
+          <a class="nav-link {% if "/athlete/" in request.path %}active{% endif %}" href="{% url 'athlete_management' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/athlee.png' %}" alt="Athlete"></span>
+            <span class="nav-text">Athlete Management</span>
+          </a>
+        </li>
+
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if page_coach %}active{% endif %}" href="{% url "coach_management" %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/platform.png' %}" alt="Coach"></span>
+            <span class="nav-text">Coaches Management</span>
+          </a>
+        </li>
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/fan/" in request.path %}active{% endif %}" href="{% url "fans_management" %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/fan.png' %}" alt="Fan"></span>
+            <span class="nav-text">Fans Management</span>
+          </a>
+        </li>
+
+
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/event/" in request.path and "/event/transaction/" != request.path %}active{% endif %}" href="{% url 'event_management' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/event.png' %}" alt="Event"></span>
+            <span class="nav-text">Event Management</span>
+          </a>
+        </li>
+        {% if subscription %}
+           <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/notification/" in request.path %}active{% endif %}" href="{% url 'send_push_notification' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/notification.png' %}" alt="Notification"></span>
+            <span class="nav-text">Send Push Notifications</span>
+          </a>
+        </li>
+        
+         {% else %}
+        <li class="nav-item sidebar-link">
+          <a class="nav-link {% if "/subscription/" in request.path %}active{% endif %}" href="{% url 'subscription' %}">
+            <span class="nav-icon"><img src="{% static 'images/sidebar/notification.png' %}" alt="subscription"></span>
+            <span class="nav-text">Upgrade</span>
+          </a>
+        </li>
+        {% endif  %}
+
+        {% endif  %}
+      </ul>
+ 
+    </div>
+  </div>

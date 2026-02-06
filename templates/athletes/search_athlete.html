@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Athlete {% endblock%}
+
+{% block nav_title %}
+    {% with page_title=page_title %}
+        {{ block.super }}
+    {% endwith %}
+
+    <style>
+        /* Align search bar nicely under the page title */
+        .search-wrapper {
+            display: flex;
+            justify-content: center;
+            margin: 25px 0 10px;
+        }
+
+        /* Modern rounded container */
+        .search-container {
+            width: 60%;
+            background: #ffffff;
+            border-radius: 40px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid #e9e9e9;
+            transition: 0.2s ease-in-out;
+        }
+
+        /* Highlight on focus hover */
+        .search-container:hover,
+        .search-input:focus {
+            box-shadow: 0px 5px 18px rgba(0,0,0,0.12);
+        }
+
+        /* Input styling */
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            color: #333;
+            padding: 6px 4px;
+        }
+
+        /* Search button */
+        .search-btn {
+            background: #f6f7f9;
+            border: none;
+            cursor: pointer;
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: 0.2s;
+        }
+
+        .search-btn:hover {
+            background: #e2e7ee;
+        }
+
+        .search-btn i {
+            font-size: 18px;
+            color: #333;
+        }
+    </style>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock nav_title %}
+
+
+{% block content %}
+
+<section class="main-section spacer">
+    <div class="container">
+        <div class="wrapper-card p-0 pb-3">
+            <div class="row gy-3">
+                <div class="col-xl-12">
+                    <!-- Search Bar -->
+                    <form class="search-wrapper">
+                        <div class="search-container">
+                            <input type="text" placeholder="Search here to see {{key}} info..." name="q" class="search-input">
+                            <button type="submit" class="search-btn">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock content %}
+
+{% block js %}
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Events Management {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Events Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+
+{% block content %} 
+<section class="main-section spacer">
+    <div class="container">
+        <div class="wrapper-card">
+            <div class="row gy-3">
+                <div class="col-xl-12">
+                    <div class="sub-heading flex-box">
+                        <h2>Create New Event</h2>
+                        <a href="{% url 'event_management' %}" class="btn black-btn bg-black text-white float-end">Back</a>                               
+                    </div>
+                    <div>
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Event Name</label>
+                                <input type="text" class="form-control" id="name" name="name" value="{{ form.name.value}}" required>
+                                <div class="text-danger">{{ form.name.errors }}</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="event_type" class="form-label">Event Type</label>
+                                <select class="form-select" id="event_type" name="event_type" requied>
+                                    <option value="" disabled="" selected="">Select</option>
+                                    <option value="ar" {% if form.event_type == "ar" %} selected{% endif %}>AR</option>
+                                    <option value="solo" {% if form.event_type == "solo" %} selected{% endif %}>Solo</option>
+                                    <option value="premium" {% if form.event_type == "premium" %} selected{% endif %}>Premium</option>
+                                    <option value="free" {% if form.event_type == "free" %} selected{% endif %}>Free</option>
+                                </select>
+                                <div class="text-danger">{{ form.event_type.errors }}</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="location" class="form-label">Location</label>
+                                <input type="text" class="form-control" id="location" name="location" value="{{ form.location.value}}" required>
+                                <div class="text-danger">{{ form.location.errors }}</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="booking_link" class="form-label">Hyperlink</label>
+                                {% for booking_link in booking_links %}
+                                <div class="d-flex align-items-start mb-2" id="new_hyperlink_{{forloop.counter}}">
+                                    <input type="url" class="form-control me-2" id="booking_link" placeholder="Booking link" name="booking_link" value="{{ booking_link }}" required>
+                                    {% if forloop.counter > 1%}
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="DeleteHyperLink('{{ forloop.counter }}')">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                                {% empty %}
+                                <div class="d-flex gap-2 flex-grow-1">
+                                    <input type="text" class="form-control mb-2" id="booking_link_label" placeholder="Link text label" name="booking_link_label" value="{{ booking_link }}" required>
+                                    <input type="url" class="form-control mb-2" id="booking_link" placeholder="Booking link" name="booking_link" value="{{ booking_link }}" required>
+                                     <button type="button" class="btn btn-danger btn-sm disabled" onclick="DeleteHyperLink('{{ forloop.counter }}')" style="height: 100%;" >
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                                {% endfor %}
+                                <div class="text-danger">{{ form.booking_link.errors }}</div>
+
+                                <div id="new_hyperlink"></div>
+
+                                <div class="d-flex justify-content-end mb-3">
+                                    <button type="button" class="btn btn-secondary" onclick="AddNewHyperLink()">
+                                        <i class="fa-solid fa-plus"></i> Add Hyperlink
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="my-3">
+                                <label for="date" class="form-label">Start Date</label>
+                                <input type="datetime-local" class="form-control" id="date" name="date" value="{{ form.date.value }}" required>
+                                <div class="text-danger">{{ form.date.errors }}</div>
+                            </div>
+
+                            <div class="my-3">
+                                <label for="end_date" class="form-label">End Date (Optional)</label>
+                                <input type="datetime-local" class="form-control" id="end_date" name="end_date" value="{{ form.end_date.value }}">
+                                <div class="text-danger">{{ form.end_date.errors }}</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="4" required>{{ form.description.value }}</textarea>
+                                <div class="text-danger">{{ form.description.errors }}</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="logo" class="form-label">Event Image</label>
+                                <input type="file" class="form-control" id="logo" name="logo" accept="image/*" requied>
+                                <div class="text-danger">{{ form.logo.errors }}</div>
+                            </div>
+                        
+                            <!-- Event Rules -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Details</label>
+                                <div id="rule_list">
+                                    {% for rule in rules %}
+                                    <div class="d-flex align-items-start mb-2" id="rule_new_{{ forloop.counter }}">
+                                        <textarea class="form-control me-2" placeholder="Describe your detail here ..." name="rules" rows="2" required>{{ rule }}</textarea>
+                                        {% if forloop.counter > 1%}
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="DeleteRule('{{ forloop.counter }}')">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>  
+                                    {% empty %}  
+
+                                    <div class="d-flex align-items-start mb-2" id="rule_new_{{ rule.id }}">
+                                        <textarea class="form-control me-2" placeholder="Describe your detail here ..." name="rules" rows="2" required></textarea>
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="DeleteRule('{{ rule.id }}')">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                    {% endfor %}
+
+                                      <!-- New Rules will be added here -->
+                                   <div id="new_rule_{{ event.id }}"></div>
+                                </div>
+
+                                <button type="button" class="btn btn-secondary mt-2 float-end" onclick="AddNewRule('new_rule_{{ event.id }}')">
+                                    <i class="fa-solid fa-plus"></i> Add Details
+                                </button>
+                            </div>
+                        
+                            <center><button type="submit" class="btn mt-4 black-btn fw-bolder">Submit</button></center>
+                        </form>
+                    </div>
+                      {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block js %}
+<script src="{% static "js/event_edit.js" %}"></script>
+{% endblock %}
+

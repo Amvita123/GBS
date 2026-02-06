@@ -1,0 +1,499 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Orgnization Management {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Roster Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% block css %}
+<style>
+    /* Hide HTMX indicator by default */
+    .htmx-indicator {
+        display: none;
+    }
+
+    /* Show indicator when HTMX is loading */
+    .htmx-request .htmx-indicator,
+    .htmx-request.htmx-indicator {
+        display: inline-block;
+    }
+
+    /* Highlight selected items */
+    .player-item:has(input:checked),
+    .coach-item:has(input:checked) {
+        background-color: #f0f9ff !important;
+        border-color: #506a93ff !important;
+    }
+
+    /* Improve checkbox visibility */
+    .form-check-input:checked {
+        background-color: #000;
+        border-color: #000;
+    }
+
+    /* Search input styling */
+    .input-group-text {
+        border-right: 0;
+    }
+
+    .border-start-0 {
+        border-left: 0 !important;
+    }
+
+    .border-start-0:focus {
+        box-shadow: none;
+        border-color: #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %} 
+{% load user_filters%}
+
+<section class="main-section spacer">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            {% comment %} <a href="{% url "organization_detail" pk=pk %}" class="btn fw-bold mb-2 ms-1"> <i class="fa-solid fa-arrow-left"></i> Back</a> {% endcomment %}
+        </div>
+
+        <div class="wrapper-card border border-1 p-0">
+            <div class="row gy-3 ">
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-box mb-0">
+                        <h2>Roster Details
+                        </h2>
+
+                        <div>
+                         <a href="{% url 'download_roster_pdf' roster.id %}" class="btn btn-black-btn bg-black text-white rounded" target="_blank">
+                            Download PDF
+                        </a>
+
+                        <button class="btn btn-black-btn bg-black text-white rounded" data-bs-toggle="modal" data-bs-target="#assing_user">
+                            Add Players/Coaches
+                        </button>
+                        </div>
+                    </div>
+                </div> 
+            </div>
+            <div class="row">
+                <div class="col-xxl-11">
+                    <div class="detail_wrapper_card ">
+                        <div class="row gy-3 gx-4 gx-xxl-5">
+                            <div class="col-md-6 col-lg-6">
+                                <div class="common-statistics">
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Name</h2>
+                                        <p class="mb-0">{{roster.name|title}}</p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Organization</h2>
+                                        <p class="mb-0">{{roster.organization.name|title}}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-lg-6">
+                                <div class="common-statistics">
+                                    <div class="common-info-detail">
+                                       <h2 class="h4">Grade</h2>
+                                        <p class="mb-0">{{roster.grade.name}}</p>
+                                    </div>
+
+                                    <div class="common-info-detail">
+                                       <h2 class="h4">Created By</h2>
+                                        <p class="mb-0">
+                                        <a  href="{% url "coach_profile" pk=roster.organization.created_by.id %}" title="Click to show this coach profile" class= "text-dark">
+                                        <span class="text-capitalize"> {{roster.organization.created_by.first_name}} {{roster.organization.created_by.last_name}}</span> ({{roster.organization.created_by.username}})
+                                        </a>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+           </div>
+        </div>
+
+
+        {% comment %} payers {% endcomment %}
+          <div class="wrapper-card border border-1 p-0">
+            <div class="row gy-3">
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-box mb-0">
+                        <h2>Players</h2>
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="display border-0">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Name</th>
+                                    <th>DOB</th>
+                                    <th>Class</th>
+                                    <th>Jersey No</th>
+                                    <th>Photo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for player in roster.roster_player.all %}
+                                <tr>
+                                    {% get_verification player.player as status %}
+
+                                    <td>{{forloop.counter}}</td>
+                                    <td>{{player.player.first_name|title}} {{player.player.last_name|title}}</td>
+                                    <td>
+                                        {% if status %}
+                                        {{status.dob|date:"m-d-Y"}}
+                                        {% else %}
+                                        {{player.player.dob|date:"m-d-Y"}} (UnVerified)
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{player.player.player.grade.name}}
+                                    </td>
+                                    <td>
+                                        {% if player.player.player.jersey_number %}
+                                        {{player.player.player.jersey_number}}
+                                        {% else %}
+                                        Not assigned
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if status %}
+                                            <span class="table_img">
+                                             <img src="{{status.photo.url}}" class="rounded-circle"> 
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-light text-danger">UnVerified</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No followers users yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% comment %} pagination {% endcomment %}
+                    {% comment %} {% include "pagination.html" with page_obj=followers %}  {% endcomment %}
+                    {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+        {% comment %} end payers {% endcomment %}
+
+
+        {% comment %} coach {% endcomment %}
+          <div class="wrapper-card border border-1 p-0">
+            <div class="row gy-3">
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-box mb-0">
+                        <h2>Coaches</h2>
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="display border-0">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Name</th>
+                                    <th>Coache type</th>
+                                    <th>Verification Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for player in roster.roster_coach.all %}
+                                <tr>
+                                    {% get_verification player.coach as status %}
+
+                                    <td>{{forloop.counter}}</td>
+                                    <td>{{player.coach.first_name|title}} {{player.player.last_name|title}}</td>
+                                    <td>{{player.coach.coach_type.name}}</td>
+                                    <td>
+                                        {% if status %}
+                                            <span class="badge bg-success">Verified</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-danger">UnVerified</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No followers users yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% comment %} {% include "pagination.html" with page_obj=followers %}  {% endcomment %}
+                </div> 
+            </div>
+        </div> 
+        {% comment %} end coach {% endcomment %}
+
+        {% comment %} add player and coach model {% endcomment %}
+        <div class="modal fade" id="assing_user" tabindex="-1" aria-labelledby="assing_user_label" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <!-- Modal Header -->
+                    <div class="modal-header border-bottom">
+                        <h5 class="modal-title fw-bold" id="assing_user_label">
+                            <i class="fa-solid fa-user-plus me-2"></i>Add Player and Coach
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <!-- Modal Body with Tabs -->
+                    <div class="modal-body p-0">
+                        <!-- Tab Navigation -->
+                        <ul class="nav nav-tabs border-bottom px-3 pt-3" id="userTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active fw-semibold" 
+                                        id="players-tab" 
+                                        data-bs-toggle="tab" 
+                                        data-bs-target="#players" 
+                                        type="button" 
+                                        role="tab" 
+                                        aria-controls="players" 
+                                        aria-selected="true"
+                                        hx-get="{% url 'load_players_html' %}?roster_id={{ roster.id }}"
+                                        hx-target="#playersListContainer"
+                                        hx-trigger="click once">
+                                    <i class="fa-solid fa-user-group me-2"></i>Players
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link fw-semibold" 
+                                        id="coaches-tab" 
+                                        data-bs-toggle="tab" 
+                                        data-bs-target="#coaches" 
+                                        type="button" 
+                                        role="tab" 
+                                        aria-controls="coaches" 
+                                        aria-selected="false"
+                                        hx-get="{% url 'load_coaches_html' %}?roster_id={{ roster.id }}"
+                                        hx-target="#coachesListContainer"
+                                        hx-trigger="click once">
+                                    <i class="fa-solid fa-chalkboard-user me-2"></i>Coaches
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Tab Content -->
+                        <form method="post" id="assignUsersForm">
+                            {% csrf_token %}
+                            <div class="tab-content" id="userTabsContent">
+                                
+                                <!-- Players Tab -->
+                                <div class="tab-pane fade show active" 
+                                    id="players" 
+                                    role="tabpanel" 
+                                    aria-labelledby="players-tab">
+                                    <div class="p-3">
+                                        <!-- Search Box -->
+                                        <div class="mb-3">
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-white">
+                                                    <i class="fa-solid fa-search text-muted"></i>
+                                                </span>
+                                                <input type="text" 
+                                                    class="form-control border-start-0" 
+                                                    name="search"
+                                                    id="playerSearch" 
+                                                    placeholder="Search players by name or email..."
+                                                    hx-get="{% url 'load_players_html' %}"
+                                                    hx-trigger="keyup changed delay:500ms"
+                                                    hx-target="#playersListContainer"
+                                                    hx-include="[name='roster_id']"
+                                                    hx-indicator="#playerSearchSpinner">
+                                                <input type="hidden" name="roster_id" value="{{ roster.id }}">
+                                                <span class="input-group-text bg-white border-start-0" id="playerSearchSpinner">
+                                                    <div class="spinner-border spinner-border-sm htmx-indicator" role="status">
+                                                        <span class="visually-hidden">Loading...</span>
+                                                    </div>
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Selected Count -->
+                                        <div class="mb-2">
+                                            <small class="text-muted">
+                                                <span id="playerSelectedCount">0</span> player(s) selected
+                                            </small>
+                                        </div>
+
+                                        <!-- Players List Container -->
+                                        <div id="playersListContainer" 
+                                            class="list-group list-group-flush" 
+                                            style="max-height: 300px; overflow-y: auto;"
+                                            hx-get="{% url 'load_players_html' %}?roster_id={{ roster.id }}"
+                                            hx-trigger="intersect once"
+                                            hx-indicator="#playersLoader">
+                                            <!-- Loading Spinner -->
+                                            <div class="text-center py-5" id="playersLoader">
+                                                <div class="spinner-border text-dark" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p class="text-muted mt-2 mb-0">Loading players...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Coaches Tab -->
+                                <div class="tab-pane fade" 
+                                    id="coaches" 
+                                    role="tabpanel" 
+                                    aria-labelledby="coaches-tab">
+                                    <div class="p-3">
+                                        <!-- Search Box -->
+                                        <div class="mb-3">
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-white">
+                                                    <i class="fa-solid fa-search text-muted"></i>
+                                                </span>
+                                                <input type="text" 
+                                                    class="form-control border-start-0" 
+                                                    name="search"
+                                                    id="coachSearch" 
+                                                    placeholder="Search coaches by name or email..."
+                                                    hx-get="{% url 'load_coaches_html' %}"
+                                                    hx-trigger="keyup changed delay:500ms"
+                                                    hx-target="#coachesListContainer"
+                                                    hx-include="[name='coach_roster_id']"
+                                                    hx-indicator="#coachSearchSpinner">
+                                                <input type="hidden" name="coach_roster_id" value="{{ roster.id }}">
+                                                <span class="input-group-text bg-white border-start-0" id="coachSearchSpinner">
+                                                    <div class="spinner-border spinner-border-sm htmx-indicator" role="status">
+                                                        <span class="visually-hidden">Loading...</span>
+                                                    </div>
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Selected Count -->
+                                        <div class="mb-2">
+                                            <small class="text-muted">
+                                                <span id="coachSelectedCount">0</span> coach(es) selected
+                                            </small>
+                                        </div>
+
+                                        <!-- Coaches List Container -->
+                                        <div id="coachesListContainer" 
+                                            class="list-group list-group-flush" 
+                                            style="max-height: 300px; overflow-y: auto;">
+                                            <!-- Will be loaded when tab is clicked -->
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-warning small mb-2 ms-5">
+                                    <i class="fa-solid fa-circle-info me-1"></i>
+                                    Note: Only one type can be added at a time either players or coaches.
+                                </p>
+                            </div>
+
+                            <!-- Modal Footer -->
+                            <div class="modal-footer border-top">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                    <i class="fa-solid fa-times me-2"></i>Cancel
+                                </button>
+                                <button type="submit" class="btn bg-black text-white px-4" id="submitBtn">
+                                    <i class="fa-solid fa-plus me-2"></i>Add Selected
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% comment %} end add player and coach model{% endcomment %}
+
+    </div>
+
+
+</section>
+
+
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+        
+    function updatePlayerCount() {
+        const checkedBoxes = document.querySelectorAll('input[name="players"]:checked');
+        const countElement = document.getElementById('playerSelectedCount');
+        if (countElement) {
+            countElement.textContent = checkedBoxes.length;
+        }
+    }
+
+    function updateCoachCount() {
+        const checkedBoxes = document.querySelectorAll('input[name="coaches"]:checked');
+        const countElement = document.getElementById('coachSelectedCount');
+        if (countElement) {
+            countElement.textContent = checkedBoxes.length;
+        }
+    }
+
+    document.addEventListener('change', function(e) {
+        if (e.target.name === 'players') {
+            updatePlayerCount();
+        } else if (e.target.name === 'coaches') {
+            updateCoachCount();
+        }
+    });
+
+    
+    const form = document.getElementById('assignUsersForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const playersChecked = document.querySelectorAll('input[name="players"]:checked').length;
+            const coachesChecked = document.querySelectorAll('input[name="coaches"]:checked').length;
+            
+            if (playersChecked === 0 && coachesChecked === 0) {
+                e.preventDefault();
+                alert('Please select at least one player or coach to add.');
+                return false;
+            }
+        });
+    }
+
+    // ===== RESET ON MODAL CLOSE =====
+    
+    const modal = document.getElementById('assing_user');
+    if (modal) {
+        modal.addEventListener('hidden.bs.modal', function() {
+            // Clear search inputs
+            const playerSearchInput = document.getElementById('playerSearch');
+            const coachSearchInput = document.getElementById('coachSearch');
+            
+            if (playerSearchInput) playerSearchInput.value = '';
+            if (coachSearchInput) coachSearchInput.value = '';
+            
+            // Uncheck all checkboxes
+            document.querySelectorAll('input[name="players"]:checked').forEach(cb => cb.checked = false);
+            document.querySelectorAll('input[name="coaches"]:checked').forEach(cb => cb.checked = false);
+            
+            // Reset counters
+            updatePlayerCount();
+            updateCoachCount();
+        });
+    }
+
+    document.body.addEventListener('htmx:afterSwap', function(event) {
+        // Update counts after content is loaded
+        updatePlayerCount();
+        updateCoachCount();
+    });
+
+});
+</script>
+{% endblock %}

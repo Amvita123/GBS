@@ -1,0 +1,496 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Identity verification {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Identity Verification" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+{% block content %} 
+{% load player_filters %}
+<section class="main-section spacer">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <a href="{% url 'identity_verification' %}" class="btn fw-bold mb-2 ms-1"> <i class="fa-solid fa-arrow-left"></i> Back</a>
+            <div>
+                <a class="btn btn-black bg-black text-white" href="{% url 'identity_verification_transaction_detail' pk=pk %}">Transactions </a>
+               <button class="btn btn-black bg-black text-white " data-bs-toggle="modal" data-bs-target="#activeModal">Take Action</button>
+            </div>
+        </div>
+
+        {% for i in verification_users %}
+        <div class="wrapper-card border border-1 p-0">
+            <div class="row gy-3 ">
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-box mb-0">
+                        <h2>{{ i.created_at|date:"m/d/Y h:i A" }}
+                            {% if i.status == "accept" %}
+                                <span class="badge bg-light text-success">Accepted</span>
+                            {% elif i.status == "pending" %}
+                                <span class="badge bg-light text-warning">Pending </span>
+                            {% else %}
+                                <span class="badge bg-light text-danger">Rejected</span>
+                            {% endif %}
+                        </h2>
+                    </div>
+                </div> 
+            </div>
+            <div class="row">
+                <div class="col-xxl-11">
+                    <div class="detail_wrapper_card ">
+                        <div class="row gy-3 gx-4 gx-xxl-5">
+                            <div class="col-md-6 col-lg-6">
+                                <div class="common-statistics">
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Legal Name</h2>
+                                        <p class="mb-0">{{i.legal_full_name|title}}</p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Athlete Type</h2>
+                                        <p class="mb-0">{{i.athlete_type.title|title}}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-lg-6">
+                                <div class="common-statistics">
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Date of Birth</h2>
+                                        <p class="mb-0">{{i.dob|date:"m-d-Y"}}</p>
+                                    </div>
+
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Document Type</h2>
+                                        <p class="mb-0">{{i.document_type.title|title}}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="col-md-6 col-lg-6">
+                                <div class="common-statistics">
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Under Age</h2>
+                                        <p class="mb-0">{% if i.is_under %} Yes {% else %} No {% endif %}</p>
+                                    </div>
+
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Parent Email</h2>
+                                        <p class="mb-0">{{i.parent_email}}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="col-md-6 col-lg-6">
+                                <div class="common-statistics">
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Parent Name</h2>
+                                        <p class="mb-0">{{i.parent_legal_name|title}}</</p>
+                                    </div>
+
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Parent Phone No.</h2>
+                                        <p class="mb-0">{{i.parent_phone_number}}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="col-md-6 col-lg-6">
+                                <div class="common-statistics">
+                                 <div class="common-info-detail">
+                                        <h2 class="h4">Parent Verified</h2>
+                                        <p style="margin-left:400px;"> 
+                                            {% if i.is_under %}
+                                             {% comment %} {{i.parent_verified|title}}  {% endcomment %}
+                                                  {% if i.parent_verified == "accept" %}
+                                                    <p class="badge bg-light text-success">Accepted</p>
+                                                {% elif i.status == "pending" %}
+                                                    <div>
+                                                        <p class="badge bg-light text-warning">Pending</p>
+                                                        {% if forloop.counter == 1 %}
+                                                        <button class="btn btn-black bg-black text-white btn-sm" data-bs-toggle="modal" data-bs-target="#Resend">Resend</button>
+                                                        {% endif %}
+                                                    </div>
+                                                {% else %}
+                                                    <div>
+                                                        <p class="badge bg-light text-danger">Rejected</p>
+                                                        {% if forloop.counter == 1 and i.status == "pending" %}
+                                                        <button class="btn btn-black bg-black text-white btn-sm" data-bs-toggle="modal" data-bs-target="#Resend">Resend</button>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endif %}
+                                            {% else %}
+                                             <p class="badge bg-light text-info">Not required</p>
+                                        {% endif %} </p>
+                                    </div>
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Photo</h2>
+                                        {% if i.photo %}
+                                        {% comment %} <img src="{{i.photo.url}}" class="document_img" /> {% endcomment %}
+
+                                        <button class="btn text-white " data-bs-toggle="modal" data-bs-target="#photo_img{{i.id}}" title="Click to view full image">
+                                             <img src="{{i.photo.url}}" class="document_img" />
+                                        </button>
+
+                                        {% comment %} document modal {% endcomment %}
+                                          <div class="modal fade" id="photo_img{{i.id}}" tabindex="-1" aria-labelledby="photo_img" aria-hidden="true">
+                                        <form method="post" enctype="multipart/form-data">
+                                            <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                <h5 class="modal-title" id="add_gradew">Identity Image</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+
+                                                <div class="modal-body">
+                                                    <img src="{{i.photo.url}}"/>
+                                                </div>
+
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#grade"
+                                                     style="background:#757575 !important">Close</button>
+                                                </div>
+                                            </div>
+                                            </div>
+                                        </form>
+                                        </div>
+
+                                        {% comment %} end document model {% endcomment %}
+                                        {% else%}
+                                        <p class="mb-0">No Photo</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-lg-6"> 
+                                <div class="common-statistics">
+                                   <div class="common-info-detail">
+                                        <h2 class="h4">Remark</h2>
+                                        <p class="mb-0">{{i.remark}}</p>
+                                    </div>
+
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Identity Img</h2>
+                                        <button class="btn" data-bs-toggle="modal" data-bs-target="#document_img{{i.id}}" title="Click to view full image">
+                                            {% if i.is_identity_pdf %}
+                                             view PDF
+                                            {% else %}
+                                            <img src="{{i.identity_img.url}}" class="document_img" />
+                                            {% endif %}
+                                        </button>
+
+                                        {% comment %} document modal {% endcomment %}
+                                          <div class="modal fade" id="document_img{{i.id}}" tabindex="-1" aria-labelledby="document_img" aria-hidden="true">
+                                            <form method="post" enctype="multipart/form-data">
+                                                <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                    <h5 class="modal-title" id="add_gradew">Identity Image</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+
+                                                    <div class="modal-body">
+                                                        {% if i.is_identity_pdf %}
+                                                        <canvas data-pdf-url="{{ i.identity_img.url }}" style="max-width:100%;"></canvas>
+                                                        {% else %}
+                                                        <img src="{{ i.identity_img.url }}" class="img-fluid" />
+                                                        {% endif %}
+                                                    </div>
+
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#grade" style="background:#757575 !important">Close</button>
+                                                    </div>
+                                                </div>
+                                                </div>
+                                              </form>
+                                            </div>
+                                        {% comment %} end document model {% endcomment %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-lg-6">
+                                <div class="common-statistics">
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Discount Usage</h2>
+                                        <div class="vstack align-items-end">
+                                            {% if discount_usage %}
+                                            <span class="badge rounded-pill bg-dark py-2 px-4 text-white bg-opacity-75 mb-0 fw-semibold">
+                                                {{ discount_usage.discount.code_identifier }}
+                                            </span>
+                                            <small class="text-muted d-block">
+                                                {{ discount_usage.created_at|date:"d M Y, h:i A" }}
+                                            </small>
+                                        {% else %}
+                                        </div>
+                                            <p class="mb-0"><span class="badge bg-secondary">Not Used</span></p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% comment %} school doc {% endcomment %}
+                            {% if i.school_document_type %}
+                            <div class="col-md-6 col-lg-6">
+                                <div class="common-statistics">
+                                      <div class="common-info-detail">
+                                        <h2 class="h4">School Doc Type</h2>
+                                        <p class="mb-0">{{i.school_document_type.name|title}}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                              <div class="col-md-6 col-lg-6">
+                                <div class="common-statistics">
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">School document</h2>
+                                        <button class="btn text-white " data-bs-toggle="modal" data-bs-target="#school_document{{i.id}}" title="Click to view full image">
+                                            <img src="{{i.school_document.url}}" class="document_img" />
+                                        </button>
+
+                                        {% comment %} document modal {% endcomment %}
+                                          <div class="modal fade" id="school_document{{i.id}}" tabindex="-1" aria-labelledby="document_img" aria-hidden="true">
+                                            <form method="post" enctype="multipart/form-data">
+                                                <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                    <h5 class="modal-title" id="add_gradew">School Document</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+
+                                                    <div class="modal-body">
+                                                        <img src="{{i.school_document.url}}"/>
+                                                    </div>
+
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#school_document{{i.id}}"
+                                                         style="background:#757575 !important">Close</button>
+                                                    </div>
+                                                </div>
+                                                </div>
+                                              </form>
+                                            </div>
+                                        {% comment %} end document model {% endcomment %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% comment %} end school doc {% endcomment %}
+
+                            {% if i.reject_reason %}
+                            <div class="col-md-12 col-lg-6">
+                                <div class="common-statistics">
+                                    <div class="common-info-detail">
+                                        <h2 class="h4">Reject Reason</h2>
+                                        <div>
+                                            {% for reason in i.reject_reason %}
+                                            <p class="mb-0">{{reason}}</</p>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                        </div>
+                    </div>
+                </div>
+           </div>
+        </div>
+        {% endfor %}
+
+    </div>
+
+        {% comment %} active modal {% endcomment %}
+         <div class="modal fade" id="activeModal" tabindex="-1" aria-labelledby="activeModal" aria-hidden="true">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h5 class="modal-title" id="add_gradew">Take Identity Verification Action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="col-12 my-3">
+                            <label for="name" class="form-label">Action</label>
+                            <select class="form-select" name="action"  id="actionSelect" required>
+                                <option value="">-----</option>
+                                <option value="accept">Accept</option>
+                                <option value="reject">Reject</option>
+                            </select>
+                            <div class="text-danger">{{ form.name.errors }}</div>
+                        </div>
+
+                        <div class="col-12 my-3" id="reasonDiv" style="display: none;">
+                            <label for="reason" class="form-label">Reason for Rejection</label>
+                            <select class="form-select" id="reasonSelect" name="reason" multiple>
+                                <option value="Date of Birth does not match">Date of Birth does not match</option>
+                                <option value="Unclear or blurred image">Unclear or blurred image</option>
+                                <option value="Document cropped or incomplete">Document cropped or incomplete</option>
+                                <option value="Document expired or invalid">Document expired or invalid</option>
+                                <option value="Incorrect document type submitted">Incorrect document type submitted</option>
+                                <option value="Name does not match">Name does not match</option>
+                                <option value="Document appears tampered or edited">Document appears tampered or edited</option>
+                                <option value="Duplicate document submitted">Duplicate document submitted</option>
+                                <option value="Address does not match">Address does not match</option>
+                                <option value="Document partially visible">Document partially visible</option>
+                                <option value="Selfie with ID unclear or missing">Selfie with ID unclear or missing</option>
+                                <option value="Document does not belong to applicant">Document does not belong to applicant</option>
+                                <option value="Missing required page or side">Missing required page or side</option>
+                                <option value="Unsupported file format">Unsupported file format</option>
+                                <option value="Glare or shadow present on document">Glare or shadow present on document</option>
+                                <option value="Low resolution image">Low resolution image</option>
+                                <option value="Official seal or signature missing">Official seal or signature missing</option>
+                                <option value="Unrecognized issuing authority">Unrecognized issuing authority</option>
+                                <option value="Fake or forged document detected">Fake or forged document detected</option>
+                                <option value="Other">Other (specify)</option>
+                            </select>
+                            <small class="text-muted">Hold <b>Ctrl</b> (Windows) or <b>Cmd</b> (Mac) to select multiple reasons.</small>
+
+                            <!-- Custom reason input (hidden by default) -->
+                            <div id="customReasonDiv" class="mt-3" style="display: none;">
+                                <label for="customReason" class="form-label">Other Reason</label>
+                                <input type="text" class="form-control" id="customReason" name="custom_reason" placeholder="Enter custom reason here">
+                            </div>
+                        </div>
+
+                        <script>
+                            // Show/hide rejection reasons based on action
+                            document.getElementById('actionSelect').addEventListener('change', function () {
+                                const reasonDiv = document.getElementById('reasonDiv');
+                                reasonDiv.style.display = this.value === 'reject' ? 'block' : 'none';
+                            });
+
+                            // Show custom reason input if "Other" is selected
+                            document.getElementById('reasonSelect').addEventListener('change', function () {
+                                const customDiv = document.getElementById('customReasonDiv');
+                                const selected = Array.from(this.selectedOptions).map(o => o.value);
+                                if (selected.includes('Other')) {
+                                    customDiv.style.display = 'block';
+                                    document.getElementById('customReason').required = true;
+                                } else {
+                                    customDiv.style.display = 'none';
+                                    document.getElementById('customReason').required = false;
+                                }
+                            });
+                        </script>
+
+                         <div class="col-12 my-3">
+                            <label for="name" class="form-label">Remark(Optional)</label>
+                            <textarea class="form-control" name="remark"></textarea>
+                            <div class="text-danger">{{ form.name.errors }}</div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#grade" style="background:#757575 !important">Cancel</button>
+                        <button type="submit" class="btn bg-black text-white" name="add_grade" value="add_grade">Submit</button>
+                    </div>
+                </div>
+                </div>
+            </form>
+        </div>
+
+        {% comment %}  end active model {% endcomment %}
+
+        {% comment %}  {% endcomment %}
+        <div class="modal fade" id="Resend" tabindex="-1" aria-labelledby="Resend" aria-hidden="true">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h5 class="modal-title"> Resend parent verification </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="col-12 my-3">
+                            <label for="name" class="form-label">parent legal name (Optional)</label>
+                            <input type="text" class="form-control" name="name" id="name" placeholder="ente name here ...">
+                            <div class="text-danger">{{ form.name.errors }}</div>
+                        </div>
+
+                        <div class="col-12 my-3">
+                            <label for="name" class="form-label">Email (Optional)</label>
+                            <input type="email" class="form-control" name="parent_email" id="parent_email" placeholder="enter here ...">
+                            <div class="text-danger">{{ form.name.errors }}</div>
+                        </div>
+
+                        <div class="col-12 my-3">
+                            <label for="name" class="form-label">Mobile number (Optional)</label>
+                            <input type="number" class="form-control" name="parent_phone_number" id="parent_phone_number" placeholder="enter here ...">
+                            <div class="text-danger">{{ form.name.errors }}</div>
+                        </div>
+
+                         <div class="col-12 my-3">
+                            <label for="name" class="form-label text-warning">Only fill in the form if you need to change the parent details; otherwise, just click Send.</label>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#document_type" style="background:#757575 !important">Cancel</button>
+                        <button type="submit" class="btn bg-black text-white" name="verification_parent" value="verification_parent">Send</button>
+                    </div>
+                </div>
+                </div>
+            </form>
+        </div>
+
+        {% comment %}  {% endcomment %}
+
+</section>
+
+
+{% endblock %}
+
+{% block js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("canvas[data-pdf-url]")
+      .forEach(function (canvas) {
+        renderPdfFromCanvas(canvas);
+      });
+  });
+
+  function renderPdfFromCanvas(canvas) {
+    const pdfUrl = canvas.dataset.pdfUrl;
+    if (!pdfUrl) return;
+
+    const ctx = canvas.getContext("2d");
+
+    pdfjsLib.getDocument(pdfUrl).promise
+      .then(pdf => pdf.getPage(1))
+      .then(page => {
+        const scale = 1.5;
+        const viewport = page.getViewport({ scale });
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        page.render({
+          canvasContext: ctx,
+          viewport: viewport
+        });
+      })
+      .catch(err => {
+        console.error("PDF render error:", err);
+      });
+  }
+</script>
+
+{% endblock %}

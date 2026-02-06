@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Push Notification {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Send Push Notification" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+
+{% block content %} 
+<section class="main-section spacer">
+    <div class="container">
+        <div class="wrapper-card p-0">
+            <div class="row gy-3 p-3">
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-box mb-3">
+                        <h2>Enter Details</h2>
+                        <div class="d-flex flex-wrap gap-3">
+                            {% if request.user.is_superuser or request.user.user_role == "ar_staff" %}
+                             <div class="hstack flex-wrap gap-2">
+                                <a href="{% url 'notification_history' action='history' %}" class="btn fw-bold bg-black text-white">History</a>
+                                <a href="{% url 'notification_history'  action='upcoming' %}" class="btn fw-bold bg-black text-white">Upcomings</a>
+                             </div>
+                             {% endif %}
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}                        
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <label for="title" class="form-label">Title</label>
+                                    <input type="text" class="form-control" id="title" name="title" value="{{ form.title.value|default:""}}" required>
+                                    <div class="text-danger">{{ form.title.errors }}</div>
+                                </div>
+                            
+                                <div class="col-sm-6">
+                                    <label for="user_type" class="form-label">To</label>
+                                    <select class="form-select" id="user_type" name="to" requied>
+                                        <option value="" disabled selected>Select</option>
+                                        {% for value, label in form.to.field.choices %}
+                                        <option value="{{ value }}" {% if form.user_type.value == value|stringformat:"s" %}selected{% endif %}>
+                                            {{ label|title }}
+                                        </option>
+                                    {% endfor %}
+                                    </select>
+                                    <div class="text-danger">{{ form.user_type.errors }}</div>
+                                </div>
+
+                                <div class="col-sm-6 d-none" id="event-div">
+                                    <label for="event" class="form-label">Event</label>
+                                    <select class="form-select" id="event" name="event">
+                                        <option value="" disabled selected>Select</option>
+                                        {% for event in events %}
+                                        <option value="{{ event.id }}" {% if form.event.value == event.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ event.name|title }}
+                                        </option>
+                                    {% endfor %}
+                                    </select>
+                                    <div class="text-danger">{{ form.event.errors }}</div>
+                                </div>
+
+                                <div class="col-sm-6">
+                                    <label for="schedule_time" class="form-label">Schedule <span class="text-secondary">(optional)</span> </label>
+                                    <input type="datetime-local" class="form-control" id="schedule_time" name="schedule" value="{{ form.schedule_time.value|default:""}}" >
+                                    <div class="text-danger">{{ form.schedule_time.errors }}</div>
+                                </div>
+
+                                <div class="col-sm-12">
+                                    <div class="mb-3">
+                                        <label for="message" class="form-label">Description</label>
+                                        <textarea class="form-control" id="message" name="message" rows="4" 
+                                        required placeholder="Write here...">{{ form.message.value|default:""}}</textarea>
+                                        <div class="text-danger">{{ form.message.errors }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                    
+                    <button type="submit" class="btn mt-4 black-btn fw-bold fs-6">Send</button>                          
+
+                        </form>
+                    </div>
+                      {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const userTypeSelect = document.getElementById('user_type');
+    const eventSelect = document.getElementById('event');
+    const eventDiv = document.getElementById('event-div');
+
+    userTypeSelect.addEventListener('change', function() {
+        if (this.value === 'event') {
+            eventDiv.classList.remove('d-none');
+             eventSelect.setAttribute('required', 'required');
+        } else {
+            eventDiv.classList.add('d-none'); 
+             eventSelect.removeAttribute('required');
+        }
+    });
+
+    // Optional: trigger on page load if "event" is already selected
+   if (userTypeSelect.value === 'event') {
+    eventDiv.classList.remove('d-none');
+    } else {
+        eventDiv.classList.add('d-none');
+    }
+    
+});
+</script>
+<script src="{% static "js/event_edit.js" %}"></script>
+{% endblock %}
+

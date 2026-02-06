@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Challenges Management {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Challenges Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+
+{% block content %} 
+
+<section class="main-section spacer">
+    <div class="container">
+        <div class="wrapper-card p-0">
+            <div class="row gy-3">                            
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-wrap gap-3 flex-box ">
+                        <h2>Challenges List</h2>    
+                        <div class="d-flex flex-wrap gap-3">
+                         <div class="d-flex">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Search..." > 
+                            <div class="sort-by ms-1">
+                                <select class="form-select" id="sortBy">
+                                    <option value="" disabled selected>Sort by</option>
+                                    <option value="0">Challenge ID</option>
+                                    <option value="1">First Squad Name</option>
+                                    <option value="2">Second Squad Name</option>
+                                    <option value="3">Created By</option>
+                                    <option value="4">Created On</option>
+                                    <option value="5">Result Date</option>
+                                    <option value="6">Status</option>
+                                </select>
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="table border-0">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Challenge ID </th>
+                                    <th>First Squad Name</th>
+                                    <th>Second Squad Name</th>
+                                    <th>Created By</th>
+                                    <th>Created on</th>
+                                    <th>Result Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for challenge in challenges %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{challenge.challenge_id|title}}</td>
+                                    <td>{{challenge.first_squad.name|title}}</td>
+                                    <td>{{challenge.second_squad.name}}</td>
+                                    <td>{{challenge.first_squad.created_by.username}}</td> 
+                                    <td>{{challenge.created_at|date:"m-d-Y"}}</td> 
+                                    <td>{{challenge.result_date|date:"m-d-Y"}}</td> 
+                                    <td>
+                                        {% if challenge.status == "pending" %}
+                                        <span class="table-status badge bg-light text-warning">{{challenge.status}}</span>
+                                        {% else %}
+                                        <span class="table-status badge bg-light text-primary">{{challenge.status}}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="table-action">
+                                            <a href="{% url "challenge_details" pk=challenge.id %}" class="table-eye">
+                                                <img src="{% static "images/table/eye.png" %}">                                                                   
+                                            </a>                                                            
+                                          
+                                            <button class="table-trash" data-bs-toggle="modal" data-bs-target="#deleteModal{{challenge.id}}">
+                                              <img src="{% static "images/table/trash.png" %}">                                                                  
+                                            </button>
+                                            {% comment %} {% if challenge.is_active %}
+                                            <span class="table-check" data-bs-toggle="modal" data-bs-target="#deactiveModal{{challenge.id}}">
+                                                <img src="{% static "images/table/checked.png" %}">                                                  
+                                            </span>
+                                            {% else %}
+                                            <span class="table-check" data-bs-toggle="modal" data-bs-target="#activeModal{{challenge.id}}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                                    <rect width="24" height="14" x="0" y="5" rx="7" ry="7" fill="#ccc"/>
+                                                    <circle cx="7" cy="12" r="5" fill="#fff"/>
+                                                  </svg>  
+                                            </span>
+                                            {% endif %} {% endcomment %}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% comment %} delete modal {% endcomment %}
+                                
+                                <div class="modal fade" id="deleteModal{{challenge.id}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                      <div class="modal-content">
+                                        <div class="modal-header">
+                                          <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete {{challenge.username}} ?
+                                        </div>
+                                        <div class="modal-footer">
+                                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                          <a href="?action=delete&id={{challenge.id}}&page={{page_number}}" class="btn btn-danger" >Delete</a>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                             
+                                  {% if challenge.is_active %}
+                                  {% comment %} deactive model {% endcomment %}
+                                  <div class="modal fade" id="deactiveModal{{challenge.id}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                      <div class="modal-content">
+                                        <div class="modal-header">
+                                          <h5 class="modal-title" id="deleteModalLabel">Confirm Deactivation</h5>
+                                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to deactive {{challenge.username}} ?
+                                        </div>
+                                        <div class="modal-footer">
+                                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                          <a  href="?action=deactivate&id={{challenge.id}}&page={{page_number}}" class="btn btn-warning text-white">Deactivate</a>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {% else %}
+                                       {% comment %} actice modal {% endcomment %}
+                                       <div class="modal fade" id="activeModal{{challenge.id}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                          <div class="modal-content">
+                                            <div class="modal-header">
+                                              <h5 class="modal-title" id="deleteModalLabel">Confirm Activation</h5>
+                                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Are you sure you want to activate {{challenge.username}} ?
+                                            </div>
+                                            <div class="modal-footer">
+                                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                              <a  href="?action=activate&id={{challenge.id}}&page={{page_number}}" class="btn btn-success">Activate</a>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    {% endif %}
+                                  {% comment %}  {% endcomment %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% comment %} pagination {% endcomment %}
+                    {% include "pagination.html" with page_obj=challenges %} 
+                    {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+{% endblock content %}
+
+{% block js %}
+<script>
+    $(document).ready(function () {
+        let table = $('#athletesTable').DataTable({
+            "paging": false,
+            "lengthChange": false,
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "dom": "lrtip",
+            "order": []  
+        });
+
+        
+        $('#searchInput').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+    
+        
+        $('#sortBy').on('change', function () {
+            let columnIndex = $(this).val();
+            if (columnIndex !== "") {
+                table.order([parseInt(columnIndex), 'asc']).draw();
+            }
+        });
+      
+    });
+</script>
+
+{% endblock %}
+

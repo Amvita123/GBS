@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Fan profile {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Transaction Details" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+{% block content %} 
+{% load player_filters %}
+<section class="main-section spacer">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <a href="{% url 'identity_verification_detail' pk=pk %}" class="btn fw-bold mb-2 ms-1"> <i class="fa-solid fa-arrow-left"></i> Back</a>
+        </div>
+
+        <!--  -->
+        {% for i in verification_users %}
+        {% for transaction in i.verification_transactions.all %}
+
+        <div class="wrapper-card border border-1 p-0">
+        <div class="row gy-3 ">
+            <div class="col-xl-12">
+                <div class="sub_heading_card sub-heading flex-box mb-0">
+                    <h2>Transaction Details</h2>
+                </div>
+            </div> 
+        </div>
+
+        <div class="row">
+            <div class="col-xxl-11">
+                <div class="detail_wrapper_card">
+                    <div class="row gy-3 gx-4 gx-xxl-5">
+                        <div class="col-md-6 col-lg-6">
+                            <div class="common-statistics">
+                                <div class="common-info-detail">
+                                    <h2 class="h4">Amount</h2>
+                                    <p class="mb-0">${{transaction.amount}}</p>
+                                </div>
+                                <div class="common-info-detail">
+                                    <h2 class="h4">Payer Name</h2>
+                                    <p class="mb-0">{{transaction.payer_info.name.given_name|title}} {{transaction.payer_info.name.surname|title}}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-lg-6">
+                            <div class="common-statistics">
+                                <div class="common-info-detail">
+                                    <h2 class="h4">Status</h2>
+                                    <p class="mb-0">{{transaction.status|title}}</p>
+                                </div>
+
+                                <div class="common-info-detail">
+                                    <h2 class="h4">Payer Email</h2>
+                                    <p class="mb-0">{{transaction.payer_info.email_address}}</p>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-6 col-lg-6">
+                            <div class="common-statistics">
+                                <div class="common-info-detail">
+                                    <h2 class="h4">Date</h2>
+                                    <p class="mb-0">{{transaction.created_at|date:"m-d-Y h:i A"}}</p>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-6 col-lg-6">
+                            <div class="common-statistics">
+                                <div class="common-info-detail">
+                                    <h2 class="h4">Phone Number</h2>
+                                    <p class="mb-0">{{transaction.payer_info.phone.phone_number.national_number}}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </div>
+        {% endfor %}
+        {% endfor %}
+        <!--  -->
+
+    </div>
+
+</section>
+
+
+{% endblock %}
+
+{% block js %}
+
+{% endblock %}

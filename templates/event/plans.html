@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+{% load static %}
+{% load event_filters %}
+{% block title%} Events Management {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Events Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% block css %}
+<style>
+    img.rounded-circle {
+        width: 80px;
+        height: 80px; 
+        object-fit: cover; 
+    }
+</style>
+{% endblock css %}
+
+{% block content %} 
+
+
+<section class="main-section spacer">
+    <div class="container">
+        <div class="wrapper-card p-0">
+            <div class="row gy-3">
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-box mb-3">
+                        <h2>Events Plans</h2>    
+                        <div class="float-end">
+                         <div class="d-flex">
+                             <a href="{% url 'event_management' %}" class="btn fw-bold ms-2 bg-black text-white">Events List</a>
+                             <a class="btn fw-bold ms-2 bg-black text-white" data-bs-toggle="modal" data-bs-target="#addplan">Add Plan</a>
+                               {% comment %} add plan {% endcomment %}
+                                <div class="modal fade" id="addplan" tabindex="-1" aria-labelledby="addplan" aria-hidden="true">
+                                    <form method="post" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                            <h5 class="modal-title" id="HyperModalLabel">Add new plan</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+                                                <div class="col-12">
+                                                    <label for="user_type" class="form-label">Choose Event Type</label>
+                                                    <select class="form-select" id="user_type" name="name" requied>
+                                                        <option value="" disabled selected>Select</option>
+                                                        {% for value, label in form.name.field.choices %}
+                                                        <option value="{{ value }}" {% if form.name.value == value|stringformat:"s" %}selected{% endif %}>
+                                                            {{ label|title }}
+                                                        </option>
+                                                    {% endfor %}
+                                                    </select>
+                                                    <div class="text-danger">{{ form.name.errors }}</div>
+                                                </div>
+
+                                                <div class="col-12 my-3">
+                                                    <label for="price" class="form-label">Price</label>
+                                                    <input type="number" class="form-control" name="price" id="price" required>
+                                                    <div class="text-danger">{{ form.price.errors }}</div>
+                                                </div>
+
+                                                <div class="col-12 my-3">
+                                                    <label for="description" class="form-label">Short Description</label>
+                                                    <input type="text" class="form-control" name="description" id="description" required>
+                                                    <div class="text-danger">{{ form.description.errors }}</div>
+                                                </div>
+
+                                                {% comment %}  {% endcomment %}
+                                                     <!-- Features -->
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Features</label>
+                                                    <div id="rule_list">
+                                                        {% for rule in rules %}
+                                                        <div class="d-flex align-items-start mb-2" id="rule_new_{{ forloop.counter }}">
+                                                            <textarea class="form-control me-2" placeholder="Describe your detail here ..." name="rules" rows="2" required>
+                                                                {{ rule }}</textarea>
+                                                            {% if forloop.counter > 1%}
+                                                            <button type="button" class="btn btn-danger btn-sm" onclick="DeleteRule('{{ forloop.counter }}')">
+                                                                <i class="fa-solid fa-trash"></i>
+                                                            </button>
+                                                            {% endif %}
+                                                        </div>  
+                                                        {% empty %}  
+
+                                                        <div class="d-flex align-items-start mb-2" id="rule_new_{{ rule.id }}">
+                                                            <textarea class="form-control me-2" placeholder="Describe here ..." name="features" rows="2" required></textarea>
+                                                            <button type="button" class="btn btn-danger btn-sm" onclick="DeleteRule('{{ rule.id }}')">
+                                                                <i class="fa-solid fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                        {% endfor %}
+
+                                                        <!-- New Rules will be added here -->
+                                                    <div id="new_rule_{{ event.id }}"></div>
+                                                    </div>
+                                                    <div class="text-danger">{{ form.features.errors }}</div>
+
+                                                    <button type="button" class="btn btn-secondary mt-2 float-end" style="background:#757575 !important"
+                                                     onclick="AddNewRule('new_rule_{{ event.id }}')">
+                                                        <i class="fa-solid fa-plus"></i> Add More
+                                                    </button>
+                                                </div>
+
+                                                {% comment %}  {% endcomment %}
+
+
+                                            </div>
+
+                                            <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background:#757575 !important">Cancel</button>
+                                            <button type="submit" class="btn bg-black text-white">Submit</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    </div>
+                                </div>
+                                {% comment %} end plan {% endcomment %}
+                          </div>
+                        </div>
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="display border-0">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Name </th>
+                                    <th>Description</th>
+                                    <th>Features</th>
+                                    <th>Price</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for plan in plans %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{plan.get_name_display }}</td>
+                                    <td> {{plan.description|truncatechars:50}}</td>
+                                    <td>
+                                        <button class="btn border border-1 ms-1 bg-dark text-white" data-bs-toggle="modal" data-bs-target="#HyperModal{{plan.id}}"
+                                        title="view booking links">
+                                              <i class="fa-solid fa-link"></i>
+                                        </button>
+                                    </td>
+                                    <td>{{plan.price}}</td> 
+                                    <td>
+                                        {% if plan.is_active %}
+                                        <span class="table-status badge bg-light text-success">Active</span>
+                                        {% else %}
+                                        <span class="table-status badge bg-light text-primary">Deactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="table-action">
+                                            <a class="table-eye" data-bs-toggle="modal" data-bs-target="#editplan{{plan.id}}">
+                                                <img src="{% static "images/edit.png" %}">
+                                            </a>
+                                            <button class="table-trash" data-bs-toggle="modal" data-bs-target="#deleteModal{{plan.id}}">
+                                              <img src="{% static "images/table/trash.png" %}">
+                                            </button>
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% comment %} delete modal {% endcomment %}
+                                <div class="modal fade" id="deleteModal{{plan.id}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                      <div class="modal-content">
+                                        <div class="modal-header">
+                                          <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete <strong>{{plan.get_name_display}} </strong>?
+                                        </div>
+                                        <div class="modal-footer">
+                                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                          <a href="?action=delete&id={{plan.id}}&page={{page_number}}" class="btn btn-danger" >Delete</a>
+                                        </div>
+                                      </div>
+                                    </div>
+                                </div>
+                                {% comment %} features model {% endcomment %}
+                                <div class="modal fade" id="HyperModal{{plan.id}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                      <div class="modal-content">
+                                        <div class="modal-header">
+                                          <h5 class="modal-title" id="HyperModalLabel">Plan features</h5>
+                                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+
+                                        <div class="modal-body">
+                                            {% for label in plan.features %}
+                                            <div>
+                                                {{forloop.counter}}) <a>{{label}}</a>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+
+                                        <div class="modal-footer">
+                                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                </div>
+                                {% comment %} end model {% endcomment %}
+
+                                 {% comment %} edit plan model {% endcomment %}
+                                <div class="modal fade" id="editplan{{plan.id}}" tabindex="-1" aria-labelledby="addplan" aria-hidden="true">
+                                    <form method="post" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="plan_id" value="{{plan.id}}" requied>
+                                        <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                            <h5 class="modal-title" id="HyperModalLabel">Update Plan</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+                                                <div class="col-12">
+                                                    <label for="user_type" class="form-label">Choose Event Type</label>
+                                                    <select class="form-select" id="user_type" name="name" requied>
+                                                        <option value="" disabled selected>Select</option>
+                                                        {% for value, label in form.name.field.choices %}
+                                                        <option value="{{ value }}" {% if plan.name == value|stringformat:"s" %}selected{% endif %}>
+                                                            {{ label|title }}
+                                                        </option>
+                                                    {% endfor %}
+                                                    </select>
+                                                    <div class="text-danger">{{ form.name.errors }}</div>
+                                                </div>
+
+                                                <div class="col-12 my-3">
+                                                    <label for="price" class="form-label">Price</label>
+                                                    <input type="number" class="form-control" name="price" id="price" value="{{plan.price}}" required>
+                                                    <div class="text-danger">{{ form.price.errors }}</div>
+                                                </div>
+
+                                                <div class="col-12 my-3">
+                                                    <label for="description" class="form-label">Short Description</label>
+                                                    <textarea class="form-control" name="description" id="description" rows="4" required>{{ plan.description }}</textarea>
+
+                                                    <div class="text-danger">{{ form.description.errors }}</div>
+                                                </div>
+
+                                                {% comment %} Features {% endcomment %}
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Features</label>
+                                                    <div id="rule_list">
+                                                        {% for rule in plan.features %}
+                                                        <div class="d-flex align-items-start mb-2" id="rule_new_{{ forloop.counter }}">
+                                                            <textarea class="form-control me-2" placeholder="Describe here ..." name="features" rows="2" required>{{ rule }}</textarea>
+                                                            {% if forloop.counter > 1%}
+                                                            <button type="button" class="btn btn-danger btn-sm" onclick="DeleteRule('{{ forloop.counter }}')">
+                                                                <i class="fa-solid fa-trash"></i>
+                                                            </button>
+                                                            {% endif %}
+                                                        </div>  
+                                                        {% empty %}  
+
+                                                        {% endfor %}
+
+                                                        <!-- New Rules will be added here -->
+                                                    <div id="new_rule_{{ plan.id }}"></div>
+                                                    </div>
+                                                    <div class="text-danger">{{ form.features.errors }}</div>
+
+                                                    <button type="button" class="btn btn-secondary mt-2 float-end" style="background:#757575 !important"
+                                                     onclick="AddNewRule('new_rule_{{ plan.id }}')">
+                                                        <i class="fa-solid fa-plus"></i> Add More
+                                                    </button>
+                                                </div>
+
+                                                {% comment %}  {% endcomment %}
+
+
+                                            </div>
+
+                                            <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background:#757575 !important">Cancel</button>
+                                            <button type="submit" class="btn bg-black text-white" name="update_plan" value="Update">Submit</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    </div>
+                                </div>
+                                {% comment %} end plan {% endcomment %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% comment %} pagination {% endcomment %}
+                    {% include "pagination.html" with page_obj=events %}
+                    {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+{% endblock content %}
+
+{% block js %}
+<script src="{% static "js/event_plan.js" %}"></script>
+<script>
+    {% if edit_model_open %}
+       var modalElement = document.getElementById("editplan{{plan_id}}");
+        var myModal = new bootstrap.Modal(modalElement);
+        myModal.show();
+    {% elif open_add_modal %}
+         var modalElement = document.getElementById("addplan");
+        var myModal = new bootstrap.Modal(modalElement);
+        myModal.show();
+    {% endif %}
+</script>
+{% endblock %}

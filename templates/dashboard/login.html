@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+    {% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/fonts.css' %}">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+     <link rel="icon" type="image/png" href="{% static 'images/favicon-96x96.png' %}" sizes="96x96">
+    <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png' %}">
+    <link rel="manifest" href="{% static 'site.webmanifest' %}">
+</head>
+<body>
+    <div class="main_container">
+        <div class="banner-side d-none d-md-block">
+            <div class="logo d-none d-md-block">
+                <img src="{% static 'logo.png'%}" width="100">
+            </div>
+            <img src="{% static 'images/login.png' %}" alt="Basketball player jumping" class="hero-image">
+        </div>
+        <div class="form-side">
+            <div class="mobile_logo d-block d-md-none">
+                <img src="{% static 'logo.png'%}" width="100">
+            </div>
+            <form class="login-form" method="post" action="">
+                {% csrf_token %}
+                <h1 class="fw-bold">Log In</h1>
+                <p class="welcome-text text-center mb-5">Welcome back ! Please enter your login details</p>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="email" placeholder="Enter your email address" name="email" value="{{email}}" required>
+                        <div class="form-text text-danger">{{form.email.errors.as_text}} </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" placeholder="Enter your password" name="password" required>
+                        <div class="form-text text-danger">{{form.password.errors.as_text}} </div>
+                        <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                    <a href="{% url 'forgot_password' %}" class="forgot-password">Forgot Password?</a>
+
+                </div>
+
+                <button type="submit" class="login-button">Log In</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.querySelector('.toggle-password').addEventListener('click', function() {
+            const passwordInput = document.querySelector('#password');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.textContent = type === 'password' ? '👁️' : '🔒';
+        });
+
+
+    </script>
+</body>
+</html>

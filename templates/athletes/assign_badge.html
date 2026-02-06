@@ -1,0 +1,208 @@
+{% load static %}
+{% load player_filters %}
+{% comment %} assign badge modal {% endcomment %}
+
+<div class="modal common-modal fade" id="assignBadgeModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-body">
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="badge_level" id="badge_level" required>
+                <div class="common-box-body">
+                    <h2>Assign Badge</h2>
+                    {% if assign_badge_pop %}
+                    <div class="alert alert-danger alert-dismissible fade show mt-2" role="alert" bis_skin_checked="1">
+                            Please select badge to assign.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endif %}
+                    <div class="common-modal-form">
+                      {% for badge in badges %}
+                        <div class="row">
+                            <div class="col-lg-12 d-flex my-2">
+                                <input class="form-check-input" type="checkbox" name="badge" value="{{badge.id}}" {% if earned_badges|check_is_badge_assigned:badge %} checked {% endif %}> 
+                              <div class="wrapper-card border border-1 ms-2">
+                                  <div class="common-modal-field">
+                                      {% if badge|check_badge_level %}
+                                      <label class="fw-bold">{{badge.name}}</label>
+                                      <div class="row gy-3">
+                                          <div class="col-xl-12">
+                                              <ul class="content-tabs" id="pills-tab" role="tablist">
+                                                {% with badge.id|concat_args:"bronze" as bronze_badge_check_arg %}
+                                                {% if earned_badges|check_badge_assign:bronze_badge_check_arg %}
+                                                 <li class="nav-item" role="presentation">
+                                                      <button class="nav-link bg-success text-white" id="pills-bronze-{{badge.name}}-tab" data-bs-toggle="pill"
+                                                       data-bs-target="#pills-bronze{{badge.id}}" type="button" role="tab" aria-controls="pills-bronze-{{badge.name}}"
+                                                        aria-selected="false" tabindex="-1" onclick="badgeLevel('{{badge.id}}_bronze')" >Bronze </button>
+                                                  </li>
+                                                {% else %}
+                                                 <li class="nav-item" role="presentation">
+                                                      <button class="nav-link" id="pills-bronze-{{badge.name}}-tab" data-bs-toggle="pill"
+                                                       data-bs-target="#pills-bronze{{badge.id}}" type="button" role="tab" aria-controls="pills-bronze-{{badge.name}}"
+                                                        aria-selected="false" tabindex="-1" onclick="badgeLevel('{{badge.id}}_bronze')" >Bronze </button>
+                                                  </li>
+                                                {% endif %}
+
+                                                {% comment %} silver badge {% endcomment %}
+                                                {% with badge.id|concat_args:"silver" as silver_badge_check_arg %}
+                                                {% if earned_badges|check_badge_assign:silver_badge_check_arg %}
+                                                    <li class="nav-item" role="presentation">
+                                                      <button class="nav-link bg-success text-white" id="pills-privacy-tab" data-bs-toggle="pill"
+                                                       data-bs-target="#pills-silver{{badge.id}}" 
+                                                      type="button" role="tab" aria-controls="pills-privacy" aria-selected="false" tabindex="-1" 
+                                                      onclick="badgeLevel('{{badge.id}}_silver')">Silver</button>
+                                                  </li>
+                                                {% else %}
+                                                    {% comment %} {% if earned_badges|check_badge_assign:bronze_badge_check_arg %} {% endcomment %}
+                                                     <li class="nav-item" role="presentation">
+                                                      <button class="nav-link" 
+                                                      id="pills-privacy-tab" data-bs-toggle="pill" 
+                                                      data-bs-target="#pills-silver{{badge.id}}" 
+                                                      type="button" role="tab" aria-controls="pills-privacy" aria-selected="false" tabindex="-1" 
+                                                      onclick="badgeLevel('{{badge.id}}_silver')" >Silver</button>
+                                                     </li>
+                                                    {% comment %} {% else %}
+                                                     <li class="nav-item" role="presentation">
+                                                      <button class="nav-link text-secondary" 
+                                                      id="pills-privacy-tab" data-bs-toggle="pill" 
+                                                      data-bs-target="#pills-silver{{badge.id}}" 
+                                                      type="button" role="tab" aria-controls="pills-privacy" aria-selected="false" tabindex="-1" 
+                                                      onclick="badgeLevel('{{badge.id}}_silver')" disabled>Silver </button>
+                                                     </li>
+                                                    {% endif %} {% endcomment %}
+                                                {% endif %}
+                                                {% endwith %}
+
+                                                {% comment %} gold badge {% endcomment %}
+                                                {% with badge.id|concat_args:"gold" as gold_badge_check_arg %}
+                                                {% if earned_badges|check_badge_assign:gold_badge_check_arg %}
+                                                  <li class="nav-item " role="presentation">
+                                                      <button class="nav-link bg-success text-white" id="pills-about-tab" data-bs-toggle="pill"
+                                                       data-bs-target="#pills-gold{{badge.id}}"
+                                                       type="button" role="tab" aria-controls="pills-about" aria-selected="true" onclick="badgeLevel('{{badge.id}}_gold')">Gold</button>
+                                                  </li>
+                                                {% else %}
+                                                {% comment %} {% if earned_badges|check_badge_assign:silver_badge_check_arg %}   {% endcomment %}
+                                                  <li class="nav-item" role="presentation">
+                                                      <button class="nav-link"
+                                                       id="pills-about-tab" data-bs-toggle="pill" data-bs-target="#pills-gold{{badge.id}}"
+                                                       type="button" role="tab" aria-controls="pills-about" aria-selected="true" onclick="badgeLevel('{{badge.id}}_gold')">Gold</button>
+                                                  </li>
+                                                  {% comment %} {% else %}
+                                                  <li class="nav-item" role="presentation">
+                                                      <button class="nav-link text-secondary disabled"
+                                                       id="pills-about-tab" data-bs-toggle="pill" data-bs-target="#pills-gold{{badge.id}}"
+                                                       type="button" role="tab" aria-controls="pills-about" aria-selected="true" onclick="badgeLevel('{{badge.id}}_gold')">Gold</button>
+                                                  </li>
+                                                  {% endif %} {% endcomment %}
+                                                {% endif %}
+                                                {% endwith %}
+                                                {% comment %} end gold {% endcomment %}
+                                                {% endwith %}
+                                                {% comment %} end bronze {% endcomment %}
+
+                                              </ul>
+                                              <div class="tab-content pt-4" id="pills-tabContent">
+                                                  {% for badge_level in  badge.badge_level.all %}
+                                                  {% if badge_level.name in badge_levels %}
+                                                  <div class="tab-pane fade" id="pills-{{badge_level.name}}{{badge.id}}" role="tabpanel" 
+                                                  aria-labelledby="pills-home-tab" tabindex="0">
+                                                      <div class="tab-content-wrapper">
+                                                          <ol>
+                                                              {% for i in badge_level.badge_template.all %}
+                                                              {% if i.title|check_template:assigned_badge_template %}
+                                                              <li> <input class="form-check-input" type="checkbox" id="flexCheckDefault"
+                                                                 name="template_{{badge.id}}_{{badge_level.name}}" value="{{i.title}}" checked> {{i.title}}</li>
+                                                              {% else %}
+                                                              <li> <input class="form-check-input" type="checkbox" id="flexCheckDefault"
+                                                                 name="template_{{badge.id}}_{{badge_level.name}}" value="{{i.title}}"> {{i.title}}</li>
+                                                               {% endif %}
+                                                              {% endfor %}
+                                                          </ol>
+                                                      </div>
+                                                  </div>
+                                                  {% endif %}
+                                                  {% endfor %}
+  
+                                              </div>
+                                          </div>
+                                      </div>
+                                      {% else %}
+                                      {% comment %} un level badges  {% endcomment %}
+                                      <div class="row gy-3">
+                                            <div class="col-xl-12">
+                                                <ul class="content-tabs" id="pills-tab" role="tablist">
+                                                    <li class="nav-item" role="presentation">
+                                                        <button class="nav-link rounded-start" id="pills-bronze-{{badge.name}}-tab"
+                                                            data-bs-toggle="pill"
+                                                            data-bs-target="#pills-bronze{{badge.id}}" type="button" role="tab"
+                                                            aria-controls="pills-bronze-{{badge.name}}" aria-selected="false"
+                                                            tabindex="-1" onclick="badgeLevel('{{badge.id}}')">
+                                                            {{badge.name}}
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        {% comment %} end un lavel badges {% endcomment %}
+                                      {% endif %}
+                                  </div>
+                              </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="common-modal-btns">
+                         <button id="backBtn" type="button" class="btn btn-secondary" style="display: none;"  onclick='GoBack()'>
+                            Back
+                        </button>
+                        <button class="btn btn-dark" name="AssignBadge">Save</button>
+                    </div>
+                    <center><span class="text-danger">Please note: only checked badges will be assigned. If you uncheck a selected badge, it will be removed. </span></center>
+                </div>
+              </form>
+          </div>
+        </div>
+    </div>
+</div>
+
+
+{% block js %}
+<script type="text/javascript">
+    $(document).ready(function() {
+        {% if jersey_form.jersey_number.errors %}
+         $('#assignJerseyModal').modal('show');
+        {% elif assign_badge_pop %}
+          $('#assignBadgeModal').modal('show');
+        {% endif %}
+    });
+  
+
+    const badge_level= {{assigned_badge_list|safe }}
+    {% comment %} console.log(badge_level); {% endcomment %}
+    function badgeLevel(level){
+
+        const index = badge_level.indexOf(level);
+        if (index === -1) {
+            badge_level.push(level);
+        } else {
+            {% comment %} badge_level.splice(index, 1); {% endcomment %}
+             const confirmed = confirm("Do you want to remove this badge level?");
+            if (confirmed) {
+                badge_level.splice(index, 1);
+            } else {
+                return; // Do nothing if user cancels
+            }
+        }
+        {% comment %} console.log(badge_level); {% endcomment %}
+        document.getElementById("badge_level").value = badge_level.join(", ");
+    }
+
+     $(document).ready(function() {  
+        document.getElementById("badge_level").value = badge_level.join(", ");
+       });
+</script>
+
+{% endblock %}

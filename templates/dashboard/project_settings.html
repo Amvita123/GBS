@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Configure App Settings {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Configure App Settings" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% block content %} 
+<style>
+    .profile-img {
+        width: 120px;
+        height: 120px;
+    }
+
+    .upload-icon:hover {
+        background-color: #f0f0f0;
+    }
+
+    .settings-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        padding: 2rem;
+    }
+
+    .setting-row {
+        padding: 1.5rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .setting-row:last-child {
+        border-bottom: none;
+    }
+
+    .setting-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+    }
+
+    .setting-description {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+
+    .form-control-inline {
+        max-width: 400px;
+    }
+
+    @media (max-width: 991px) {
+        .setting-row {
+            padding: 1rem 0;
+        }
+    }
+</style>
+
+<section class="main-section profile-section spacer">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-10 col-lg-11">
+                <div class="settings-card">
+                    <div class="mb-2">
+                        <p class="text-muted mb-0">
+                         <a href="{% url 'add_sport' %}" class="btn bg-black text-white">Sports Management</a>
+                        </p>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data"> 
+                        {% csrf_token %}
+                        
+                        <!-- Player Verification -->
+                        <div class="setting-row">
+                            <div class="row align-items-center">
+                                <div class="col-lg-4 mb-3 mb-lg-0">
+                                    <label class="setting-label">Player Verification Amount</label>
+                                    <p class="setting-description">Enter the player verification fee. Use 0 for free verification.</p>
+                                </div>
+                                <div class="col-lg-8">
+                                    <input type="number" 
+                                           class="form-control form-control-inline" 
+                                           name="player_verification" 
+                                           placeholder="Enter player verification amount" 
+                                           value="{{project_config.player_verification.value}}" 
+                                           required>
+                                    {% if form.player_verification.errors %}
+                                        <div class="text-danger small mt-1">{{ form.player_verification.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- coach -->
+                        <div class="setting-row">
+                            <div class="row align-items-center">
+                                <div class="col-lg-4 mb-3 mb-lg-0">
+                                    <label class="setting-label">Coach Verification Amount</label>
+                                    <p class="setting-description">Enter the coach verification fee. Use 0 for free verification.</p>
+                                </div>
+                                <div class="col-lg-8">
+                                    <input type="number" step="0.01"
+                                           class="form-control form-control-inline" 
+                                           name="coach_verification" 
+                                           placeholder="Enter coach verification amount" 
+                                           value="{{project_config.coach_verification.value}}">
+                                    {% if form.coach_verification.errors %}
+                                        <div class="text-danger small mt-1">{{ form.coach_verification.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Organization Fee -->
+                        <div class="setting-row">
+                            <div class="row align-items-center">
+                                <div class="col-lg-4 mb-3 mb-lg-0">
+                                    <label class="setting-label">Organization Fee</label>
+                                    <p class="setting-description">Enter the organization creation fee. Use 0 for free.</p>
+                                </div>
+                                <div class="col-lg-8">
+                                    <input type="number" step="0.01"
+                                           class="form-control form-control-inline" 
+                                           name="organization_create" 
+                                           placeholder="Enter Organization create amount"
+                                           value="{{project_config.organization_create.value}}">
+                                    {% if form.organization_create.errors %}
+                                        <div class="text-danger small mt-1">{{ form.organization_create.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- admin_subscription Fee -->
+                        <div class="setting-row">
+                            <div class="row align-items-center">
+                                <div class="col-lg-4 mb-3 mb-lg-0">
+                                    <label class="setting-label">Admin Subscription Fee</label>
+                                    <p class="setting-description">Enter the sub admin or external subscription fee. Use 0 for free.</p>
+                                </div>
+                                <div class="col-lg-8">
+                                    <input type="number" step="0.01"
+                                           class="form-control form-control-inline" 
+                                           name="admin_subscription" 
+                                           placeholder="Enter Organization create amount"
+                                           value="{{project_config.admin_subscription.value}}">
+                                    {% if form.admin_subscription.errors %}
+                                        <div class="text-danger small mt-1">{{ form.admin_subscription.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="mt-4 pt-3">
+                            <button type="submit" class="btn black-btn fw-bold px-4 py-2">
+                                Update Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock content %}

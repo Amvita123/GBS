@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <title>Verification Status - Athlete Rated</title>
+    <link href="{% static 'css/email.css' %}" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+
+        <h2>Identity Verification Mail</h2>
+
+        <p>Hello <span class="highlight">{{ username }}</span>,</p>
+
+        {% if days_left > 0 %}
+        <p>
+            Your <strong>{{ role|title }}</strong> identity verification on Athlete Rated
+            will expire in <strong>{{ days_left }} days</strong>.
+        </p>
+        {% else %}
+        <p>
+            Your <strong>{{ role|title }}</strong> identity verification has <strong>expired</strong>.
+        </p>
+        {% endif %}
+
+        <div class="details-box">
+            <p><strong>Account Role:</strong> {{ role|title }}</p>
+
+            {% if days_left > 0 %}
+            <p><strong>Status:</strong> Expiring Soon</p>
+            <p><strong>Days Remaining:</strong> {{ days_left }}</p>
+            {% else %}
+            <p><strong>Status:</strong> Expired</p>
+            {% endif %}
+        </div>
+
+        {% if days_left > 0 %}
+        <p>
+            Please renew your verification to avoid interruption of premium features
+            and platform access.
+        </p>
+        {% else %}
+        <p>
+            Your premium access has been paused. Please renew your verification
+            to regain full access.
+        </p>
+        {% endif %}
+        <p>
+            If you believe this message was sent in error, please contact our support team.
+        </p>
+
+        <div class="footer">
+            <p>© {{ year }} Athlete Rated. All rights reserved.</p>
+            <small>This notification was sent automatically by Athlete Rated.</small>
+        </div>
+
+    </div>
+</body>
+</html>

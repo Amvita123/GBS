@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} post Management {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Post Report Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% block content %} 
+
+
+<section class="main-section spacer">
+    <div class="container">
+        <div class="wrapper-card p-0">
+            <div class="row gy-3">                            
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-wrap gap-3 flex-box mb-3">
+                        <h2>Post Report List</h2>    
+                        <div class="d-flex">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Search..." > 
+                            <div class="sort-by ms-1">
+                                <select class="form-select" id="sortBy">
+                                    <option value="" disabled selected>Sort by</option>
+                                    <option value="0">Reported By</option>
+                                    <option value="1">Reason</option>
+                                    <option value="2">UserName</option>
+                                </select>
+                            </div>
+                          </div>                                
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="display border-0">
+                            <thead>
+                                <tr>
+                                    <th>SNo. </th>
+                                    <th>Reported By</th>
+                                    <th>Reason</th>
+                                    <th>User Name</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in reports %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td> {{report.user.username}} </td>
+                                    <td>{{report.reason.reason}}</td> 
+                                    <td>{{report.feed.user.username}}</td> 
+                                    <td>
+                                        <span class="table-action">
+                                            <a href="{% url "post_report_details" pk=report.id %}" class="table-eye">
+                                                <img src="{% static "images/table/eye.png" %}">                                                                   
+                                            </a>
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                                                      
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% comment %} pagination {% endcomment %}
+                    {% include "pagination.html" with page_obj=reports %} 
+                    {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+{% endblock content %}
+
+{% block js %}
+<script>
+    $(document).ready(function () {
+        let table = $('#athletesTable').DataTable({
+            "paging": false,
+            "lengthChange": false,
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "dom": "lrtip",
+            "order": []  
+        });
+
+        
+        $('#searchInput').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+    
+        
+        $('#sortBy').on('change', function () {
+            let columnIndex = $(this).val();
+            if (columnIndex !== "") {
+                table.order([parseInt(columnIndex), 'asc']).draw();
+            }
+        });
+
+         
+    });
+</script>
+
+{% endblock %}
+

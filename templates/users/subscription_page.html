@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+{% block nav_title %}
+    {% with page_title="Subscription Feature" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% block content %}
+<section class="common-section spacer">
+    <div class="container">
+      <div class="dashboard-card-wrapper">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-3 g-4 mt-2">
+            <form method="post">
+                {% csrf_token %}
+                <div class="col">
+                    <div class="subscription-card-item">
+                        <div class="">
+                            <div class="title">
+                                <h2 class="h3 fw-semibold">Upgrade Feature</h2>
+                            </div>  
+                            <div class="mt-3">
+                                <h2 class="fw-bold text-center h1">$199 <span class="fs-6 fw-normal">/ month</span></h2>
+                            </div> 
+                            <div class="">
+                                <ul class="subscription-feature-list">
+                                    <li>Includes adding the Assign Player Badges Button on the Athlete Tab</li>
+                                    <li>Includes adding push notification to the dashboard </li>
+                                    <li>Includes adding event badges to events - these show up on the check-in player profile</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="mt-3 btn black-btn w-100 rounded-5 fs-6">Click to Upgrade</button> 
+                </div>
+            </form>
+        </div>
+      </div>    
+    </div>
+  </section>
+{% endblock%}

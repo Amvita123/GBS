@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Athlete Rated</title>
+<!-- Bootstrap 5 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .hero-gradient {
+      background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 50%, #ef4444 100%);
+    }
+    .btn-primary-custom {
+      background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+      transition: all 0.3s ease;
+      color: white;
+      font-weight: 600;
+      border: none;
+    }
+    .btn-primary-custom:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+    }
+    .basketball-icon {
+      animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-10px); }
+      60% { transform: translateY(-5px); }
+    }
+    #fallback-link {
+      display: block;
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color: #0d6efd;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    #fallback-link:hover {
+      color: #0a58ca;
+    }
+</style>
+</head>
+<body class="bg-light min-vh-100">
+<!-- Header -->
+<header class="hero-gradient text-white py-5">
+<div class="container text-center">
+<div class="basketball-icon mb-4">
+<svg class="mx-auto" width="64" height="64" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10
+          10 10 10-4.48 10-10S17.52 2 12 2zm0
+          18c-4.42 0-8-3.58-8-8s3.58-8
+          8-8 8 3.58 8 8-3.58 8-8 8z"/>
+<path d="M12 6c-3.31 0-6 2.69-6
+          6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0
+          10c-2.21 0-4-1.79-4-4s1.79-4
+          4-4 4 1.79 4 4-1.79 4-4 4z"/>
+</svg>
+</div>
+<h1 class="display-5 fw-bold mb-3">Your Payment has been failed.</h1>
+<p class="lead"> Sometimes payment confirmation takes a little longer. If your payment was successful, Please wait and check your event (if success it will show to all users).</p>
+</div>
+</header>
+<!-- Main Content -->
+<main class="container py-5">
+<!-- App Banner -->
+<div id="app-banner" class="card shadow border-start border-primary border-0 mb-5" style="display:none;">
+<div class="card-body d-flex flex-column flex-md-row align-items-center justify-content-between">
+<div class="d-flex align-items-center mb-3 mb-md-0">
+<div class="bg-primary bg-opacity-10 p-3 rounded me-3">
+<svg width="32" height="32" fill="currentColor" class="text-primary" viewBox="0 0 24 24">
+<path d="M17 1.01L7 1c-1.1 0-2 .9-2
+              2v18c0 1.1.9 2 2 2h10c1.1
+              0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17
+              19H7V5h10v14z"/>
+</svg>
+</div>
+<div>
+<h5 class="fw-semibold mb-1">Open in Mobile App</h5>
+<p class="text-muted mb-0">
+              Please click on open app if not auto redirect thanks ...<br>
+<span id="redirect-timer"></span>
+</p>
+</div>
+</div>
+<div class="d-flex gap-2">
+<button id="open-app-btn" class="btn btn-primary px-4">Open App</button>
+<button id="close-banner-btn" class="btn btn-outline-secondary px-4">Close</button>
+</div>
+</div>
+</div>
+<!-- Content Section -->
+<div class="row g-4 align-items-center">
+<div class="col-md-6">
+<h2 class="fw-bold mb-3">About Us</h2>
+<p class="text-muted mb-4">
+          Athlete Rated helps coaches, players, and parents manage game schedules,
+          player attendance, and team communications all in one place.
+</p>
+<ul class="list-unstyled">
+<li class="mb-2 d-flex align-items-center">
+<i class="bi bi-check-circle-fill text-success me-2"></i>
+            Event Management
+</li>
+<li class="mb-2 d-flex align-items-center">
+<i class="bi bi-check-circle-fill text-success me-2"></i>
+            Player Management Tools
+</li>
+<li class="mb-2 d-flex align-items-center">
+<i class="bi bi-check-circle-fill text-success me-2"></i>
+            Team/Player Simulations.
+</li>
+</ul>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-dark text-white py-4">
+<div class="container text-center">
+<p class="mb-0">© Athlete Rated. All rights reserved.</p>
+</div>
+</footer>
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const appBanner = document.getElementById('app-banner');
+      const openAppBtn = document.getElementById('open-app-btn');
+      const closeBannerBtn = document.getElementById('close-banner-btn');
+      const redirectTimer = document.getElementById('redirect-timer');
+
+
+      function getMobileOS() {
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+        if (/android/i.test(userAgent)) {
+          return "Android";
+        }
+
+        // iOS detection (iPhone/iPad/iPod)
+        if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+          return "iOS";
+        }
+
+        return "unknown";
+      }
+
+      const os = getMobileOS();
+
+ 
+      // Show banner after 1 second
+      setTimeout(() => { appBanner.style.display = 'block'; }, 1000);
+ 
+      // Get eventId from URL
+      function getEventId() {
+        const pathSegments = window.location.pathname.split('/');
+        return (pathSegments.length > 2 && pathSegments[1] === 'event_payment_cancel') ? pathSegments[2] : '';
+      }
+ 
+      // Open app function
+      function openApp() {
+        const eventId = getEventId();
+        const fallbackLink = `{{current_site}}/app/event_payment_cancel/${os}/${eventId ? '/' + eventId : ''}`;
+        window.location.href = fallbackLink; // redirect in same tab
+        appBanner.style.display = 'none';
+      }
+ 
+      // Manual button click
+      openAppBtn.addEventListener('click', openApp);
+ 
+      // Close button also redirects
+      closeBannerBtn.addEventListener('click', openApp);
+ 
+      // Countdown timer (10 seconds)
+      let secondsLeft = 10;
+      redirectTimer.textContent = `You will be redirected to the app in ${secondsLeft} seconds...`;
+ 
+      const countdown = setInterval(() => {
+        secondsLeft--;
+        if (secondsLeft > 0) {
+          redirectTimer.textContent = `You will be redirected to the app in ${secondsLeft} seconds...`;
+        } else {
+          clearInterval(countdown);
+          openAppBtn.click(); // auto open
+        }
+      }, 1000);
+    });
+</script>
+</body>
+</html>

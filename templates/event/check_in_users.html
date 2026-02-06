@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title%} Event check in {% endblock%}
+
+{% block nav_title %}
+    {% with page_title="Event Management" %}
+        {{ block.super }}
+    {% endwith%}
+{% endblock nav_title%}
+
+{% load user_filters%}
+{% block content %} 
+
+<section class="main-section spacer">
+    <div class="container">
+        <div class="wrapper-card p-0">
+            <div class="row gy-3">
+                <div class="col-xl-12">
+                    <div class="sub_heading_card sub-heading flex-box mb-3">
+                        <h2>{{event.name|title}} Check In users List</h2>
+                        <div class="float-end">
+                         <div class="d-flex">
+                            <form class="d-flex">
+                              <input type="text" id="" class="form-control" placeholder="Search..." title="type anything realted to user to search..." name="q" value="{{request.GET.q}}" > 
+                              <button class="btn border border-1 ms-1" title="click to deep search"><i class="fa fa-search"></i></button>
+                              {% if query %}
+                                 <a href="{% url 'event_check_in_users' pk=pk %}" class="btn border border-1 ms-1 bg-dark text-white" title="clear search">
+                                  <i class="fa-solid fa-xmark"></i>    </a>
+                              {% endif %}
+                            </form>
+                          </div>
+                        </div>
+                    </div>
+                    <div class="table-blk">
+                        <table id="athletesTable" class="display border-0">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Full Name </th>
+                                    <th>Email Address</th>
+                                    <th>UserType</th>
+                                    <th>Jersey No</th>
+                                    <th>Team Name</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                    <tr>
+                                        {% get_verification user.user as verification %}
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>
+                                            {% if verification  %}
+                                            {% if verification.photo %}
+                                            {% comment %} <span class="table_img">
+                                             <img src="{{verification.photo.url}}" class="rounded-circle"> 
+                                            </span> {% endcomment %}
+                                              <button class="btn text-white  " data-bs-toggle="modal" data-bs-target="#photo_img{{user.id}}" title="Click to view full image">
+                                             <img src="{{verification.photo.url}}" class="table_img" />
+                                           </button>
+
+                                            {% comment %} document modal {% endcomment %}
+                                            <div class="modal fade" id="photo_img{{user.id}}" tabindex="-1" aria-labelledby="photo_img" aria-hidden="true">
+                                                <form method="post" enctype="multipart/form-data">
+                                                    <div class="modal-dialog modal-lg">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                        <h5 class="modal-title" id="add_gradew">Identity Image</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+
+                                                        <div class="modal-body">
+                                                            <img src="{{verification.photo.url}}"/>
+                                                        </div>
+
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#photo_img{{user.id}}"
+                                                            style="background:#757575 !important">Close</button>
+                                                        </div>
+                                                    </div>
+                                                    </div>
+                                                </form>
+                                                </div>
+                                                {% comment %} end doc img modal {% endcomment %}
+                                            {% endif %}
+
+                                            {{verification.legal_full_name|title}}
+                                            {% else %}
+                                            {{user.user.first_name|title}} {{user.user.last_name|title}}
+                                            <span class="badge bg-warning me-1">UnVerified</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{user.user.email}}</td>
+                                        <td>{{user.user.user_role}}</td>
+                                        <td>
+                                            {% if user.jersey_number %}
+                                            {{user.jersey_number}}
+                                            {% elif user.user.player_profile.jersey_number %} 
+                                            {{user.user.player_profile.jersey_number}}
+                                            {% else %} Unknown {% endif %}
+                                        </td>
+                                        <td>{% if user.squad is not None %}{{user.squad}} {% else %} Unknown{% endif %}</td>
+                                        <td>
+                                            {% if user.user.player_profile %}
+                                            <span class="table-action">
+                                               <a class="btn border border-1 ms-1 bg-dark text-white" href="{% url 'athlete_profile' user.user.id %}?assign_badge=true"
+                                                title="Assign badge to player {{user.user.first_name}} {{user.user.last_name}}">
+                                                <i class="fa-solid fa-award"></i>
+                                               </a>
+                                            </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% comment %} pagination {% endcomment %}
+                    {% include "pagination.html" with page_obj=users %} 
+                    
+                    {% comment %}  {% endcomment %}
+                </div> 
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+{% endblock content %}
+
+{% block js %}
+{% comment %} <script>
+    $(document).ready(function () {
+        let table = $('#athletesTable').DataTable({
+            "paging": false,
+            "lengthChange": false,
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "dom": "lrtip",
+            "order": []  
+        });
+
+        
+        $('#searchInput').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+    
+        
+        $('#sortBy').on('change', function () {
+            console.log("Search:", this.value);
+            let column = $(this).val() === "badges_earned" ? 6 : 1;
+            console.log(column);
+            table.order([column, 'asc']).draw();
+        });
+    
+      
+    });
+</script> {% endcomment %}
+
+
+<script>
+    $(document).ready(function () {
+        let table = $('#athletesTable').DataTable({
+            paging: false,
+            lengthChange: false,
+            searching: true,
+            ordering: true,
+            info: false,
+            autoWidth: false,
+            dom: "lrtip",
+            order: [],
+            columnDefs: [
+                { targets: 5, type: "num" }, // Badges Earned
+                { targets: 6, type: "num" }  // Jersey No
+            ]
+        });
+
+        const columnMap = {
+            "first_name": 0,
+            "last_name": 1,
+            "email_address": 2,
+            "user_name": 3,
+            "position": 4,
+            "badges_earned": 5,
+            "jersey_number": 6,
+            "status": 7
+        };
+
+        // Custom search
+        $('#searchInput').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+
+        // Custom sort
+        $('#sortBy').on('change', function () {
+            let selected = $(this).val();
+            let columnIndex = columnMap[selected];
+
+            if (columnIndex !== undefined) {
+                // Default to ascending sort
+                table.order([columnIndex, 'asc']).draw();
+            }
+        });
+    });
+</script>
+
+
+{% endblock %}
+

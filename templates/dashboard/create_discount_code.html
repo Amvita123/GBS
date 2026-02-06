@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Discount Management{% endblock %}
+{% block nav_title %}
+{% with page_title="Discount Management" %}
+{{ block.super }}
+{% endwith %}
+{% endblock nav_title %}
+
+{% block content %}
+<section class="main-section spacer">
+   <div class="container">
+      <div class="wrapper-card">
+         <div class="row px-0 my-4">
+            <div class="col-xl-12">
+               <div class="sub_heading_card sub-heading flex-box mb-4 justify-content-between">
+                  <h2>
+                     {% if edit %}
+                     Edit Discount Code
+                     {% else %}
+                     Create Discount Code
+                     {% endif %}
+                  </h2>
+                  <a href="{% url 'discount_management' %}" class="btn bg-black text-white px-4">
+                     Back
+                  </a>
+               </div>
+
+               <form method="post">
+                  {% csrf_token %}
+
+                  <div class="row g-4">
+
+                     <div class="col-md-12">
+                        <label class="form-label">Code Value %</label>
+                        {{ form.code_value }}
+                        <div class="text-danger">{{ form.code_value.errors }}</div>
+                     </div>
+
+                     <div class="col-md-12">
+                        <label class="form-label">Usage Limit</label>
+                        {{ form.usage_limit }}
+                        <div class="text-danger">{{ form.usage_limit.errors }}</div>
+                     </div>
+
+                     <div class="col-md-12">
+                         {% if not edit %}
+                           <div class="form-check form-switch">
+
+                              <input class="form-check-input"
+                              type="checkbox"
+                              id="auto_generate"
+                              name="auto_generate"
+                              {% if not form.instance.code_identifier %}checked{% endif %}>
+                              <label class="form-check-label" for="auto_generate">
+                                 Auto Generate Code
+                              </label>
+                           </div>
+                      {% endif %}
+
+
+                        <div id="code_field">
+                           <label class="form-label">Code Identifier</label>
+                           {{ form.code_identifier }}
+                           <div class="text-danger">{{ form.code_identifier.errors }}</div>
+                        </div>
+
+                     </div>
+
+                  </div>
+
+                  <div class="col-md-12 text-end mt-3">
+                      <button type="reset" class="btn btn-warning me-2 text-white">Reset</button>
+                     <button type="submit" class="btn bg-black text-white px-4">
+                        {% if edit %}
+                        Update Code
+                        {% else %}
+                        Save Code
+                        {% endif %}
+                     </button>
+                  </div>
+
+               </form>
+
+            </div>
+         </div>
+      </div>
+   </div>
+</section>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const autoToggle = document.getElementById('auto_generate');
+    const codeIdentifierDiv = document.getElementById('code_identifier').parentElement;
+
+    function toggleCodeIdentifier() {
+        if (autoToggle.checked) {
+            codeIdentifierDiv.style.display = 'none';
+        } else {
+            codeIdentifierDiv.style.display = 'block';
+        }
+    }
+
+    toggleCodeIdentifier();
+
+    autoToggle.addEventListener('change', toggleCodeIdentifier);
+});
+</script>
+
+{% endblock %}
